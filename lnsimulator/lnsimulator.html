@@ -6,11 +6,12 @@
     <title>Interactive Lightning Network Animation</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<header>
-    <h1>Lightning Network Simulator</h1>
-    <p>This interactive simulator helps you understand how payments are routed through a Lightning Network. Experiment with different network configurations and see how payments find their way from sender to receiver!</p>
-</header>    
 <body>
+    <header>
+        <h1>Lightning Network Simulator</h1>
+        <p>This interactive simulator helps you understand how payments are routed through a Lightning Network. Experiment with different network configurations and see how payments find their way from sender to receiver!</p>
+    </header>
+
     <div class="controls">
         <div class="control-group">
             <label for="nodeCount">Number of Nodes:</label>
@@ -55,6 +56,26 @@
             <button id="sendPayment">Send Payment</button>
         </div>
     </div>
+
+    <div class="legend">
+        <h3>Legend:</h3>
+        <ul>
+            <li><span class="node-icon"></span> Node</li>
+            <li><span class="channel-icon small"></span> Low capacity channel</li>
+            <li><span class="channel-icon medium"></span> Medium capacity channel</li>
+            <li><span class="channel-icon large"></span> High capacity channel</li>
+        </ul>
+    </div>
+
+    <div class="instructions">
+        <h3>How to use:</h3>
+        <ol>
+            <li>Choose the number of nodes and channel probability, then click "Regenerate Network".</li>
+            <li>Select a sender node, receiver node, and payment amount.</li>
+            <li>Click "Send Payment" to see the payment route through the network.</li>
+        </ol>
+    </div>
+
     <div class="network" id="network"></div>
     <div class="tooltip" id="tooltip"></div>
 
