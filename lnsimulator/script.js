@@ -41,13 +41,14 @@ function generateNetwork() {
                 const capacity = generateCapacity();
                 const channelClass = getChannelClass(capacity);
                 channel.classList.add(channelClass);
+                const balance1 = Math.floor(capacity * Math.random());
                 channels.push({
                     element: channel,
                     start: i,
                     end: j,
                     capacity: capacity,
-                    balance1: Math.floor(capacity * Math.random()), // Balance with start node
-                    balance2: capacity - Math.floor(capacity * Math.random()), // Balance with end node
+                    balance1: balance1,
+                    balance2: capacity - balance1,
                     baseFee: 1000, // 1 satoshi base fee
                     feeRate: 0.001 // 0.1% fee rate
                 });
@@ -60,6 +61,7 @@ function generateNetwork() {
 
     updateChannels();
     populateNodeDropdowns();
+    validateChannelBalances();
 }
 
 // Simulates the random capacity of a payment channel
@@ -107,7 +109,6 @@ function updateChannels() {
 }
 
 function visualizeChannelBalance(channel) {
-    const totalWidth = channel.element.offsetWidth;
     const balance1Percent = (channel.balance1 / channel.capacity) * 100;
     
     const balance1Element = document.createElement('div');
@@ -251,6 +252,7 @@ function animateTransaction() {
         if (step >= path.length - 1) {
             transaction.remove();
             updateChannelBalances(path, paymentAmount, totalFees);
+            validateChannelBalances();
             alert(`Payment of ${formatCapacity(paymentAmount)} successfully sent from Node ${nodes[senderIndex].textContent} to Node ${nodes[receiverIndex].textContent}\nTotal fees paid: ${formatCapacity(totalFees)}`);
             return;
         }
@@ -294,23 +296,34 @@ function animateTransaction() {
 }
 
 function updateChannelBalances(path, amount, fees) {
+    let remainingAmount = amount + fees;
     for (let i = 0; i < path.length - 1; i++) {
         const channel = channels.find(c => 
             (c.start === path[i] && c.end === path[i + 1]) || 
             (c.end === path[i] && c.start === path[i + 1])
         );
         
+        const fee = channel.baseFee + Math.floor(remainingAmount * channel.feeRate);
+        const amountWithFee = remainingAmount;
+        remainingAmount -= fee;
+
         if (channel.start === path[i]) {
-            channel.balance1 -= amount;
-            channel.balance2 += amount;
+            channel.balance1 -= amountWithFee;
+            channel.balance2 += amountWithFee - fee;
         } else {
-            channel.balance2 -= amount;
-            channel.balance1 += amount;
+            channel.balance2 -= amountWithFee;
+            channel.balance1 += amountWithFee - fee;
         }
-        
-        amount += Math.floor(amount * channel.feeRate) + channel.baseFee;
     }
     updateChannels();
+}
+
+function validateChannelBalances() {
+    channels.forEach(channel => {
+        if (channel.balance1 + channel.balance2 !== channel.capacity) {
+            console.error('Invalid channel balance:', channel);
+        }
+    });
 }
 
 regenerateButton.addEventListener('click', generateNetwork);
