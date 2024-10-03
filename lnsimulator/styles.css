@@ -4,6 +4,10 @@ body {
     padding: 20px;
 }
 
+header {
+    margin-bottom: 20px;
+}
+
 .controls {
     margin-bottom: 20px;
 }
@@ -38,12 +42,23 @@ select, button {
     align-items: center;
     color: white;
     font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.node:hover {
+    transform: scale(1.1);
 }
 
 .channel {
     position: absolute;
     background-color: #2ecc71;
     transform-origin: 0 50%;
+    transition: opacity 0.2s;
+}
+
+.channel:hover {
+    opacity: 0.8;
 }
 
 .transaction {
@@ -64,4 +79,66 @@ select, button {
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.3s;
+}
+
+.legend {
+    margin-top: 20px;
+}
+
+.legend ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.legend li {
+    margin-bottom: 5px;
+}
+
+.node-icon, .channel-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.node-icon {
+    background-color: #3498db;
+    border-radius: 50%;
+}
+
+.channel-icon {
+    background-color: #2ecc71;
+}
+
+.channel-icon.small {
+    height: 2px;
+}
+
+.channel-icon.medium {
+    height: 4px;
+}
+
+.channel-icon.large {
+    height: 6px;
+}
+
+.instructions {
+    margin-top: 20px;
+}
+
+.instructions ol {
+    padding-left: 20px;
+}
+
+.highlighted {
+    box-shadow: 0 0 10px #f39c12;
+}
+
+.node.highlighted {
+    background-color: #f39c12;
+}
+
+.channel.highlighted {
+    background-color: #f39c12;
 }
