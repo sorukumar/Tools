@@ -39,6 +39,8 @@ function generateNetwork() {
                 channel.className = 'channel';
                 network.appendChild(channel);
                 const capacity = generateCapacity();
+                const channelClass = getChannelClass(capacity);
+                channel.classList.add(channelClass);
                 channels.push({element: channel, start: i, end: j, capacity: capacity});
 
                 channel.addEventListener('mouseenter', (e) => showTooltip(e, capacity));
@@ -119,8 +121,13 @@ function populateNodeDropdowns() {
     });
 }
 
-// Implements a simple pathfinding algorithm to route payments through the network
+function getChannelClass(capacity) {
+    if (capacity < 20000000) return 'small';
+    if (capacity < 50000000) return 'medium';
+    return 'large';
+}
 
+// Implements a simple pathfinding algorithm to route payments through the network
 function findPathWithCapacity(start, end, amount) {
     const visited = new Set();
     const queue = [[start]];
@@ -158,6 +165,26 @@ function findPathWithCapacity(start, end, amount) {
     return [];
 }
 
+function highlightPath(path) {
+    path.forEach((nodeIndex, i) => {
+        if (i < path.length - 1) {
+            const channel = channels.find(c => 
+                (c.start === nodeIndex && c.end === path[i + 1]) || 
+                (c.end === nodeIndex && c.start === path[i + 1])
+            );
+            if (channel) {
+                channel.element.classList.add('highlighted');
+            }
+        }
+        nodes[nodeIndex].classList.add('highlighted');
+    });
+}
+
+function clearHighlights() {
+    channels.forEach(channel => channel.element.classList.remove('highlighted'));
+    nodes.forEach(node => node.classList.remove('highlighted'));
+}
+
 // Simulates and visualizes a payment being routed through the network
 function animateTransaction() {
     const senderIndex = parseInt(document.getElementById('senderNode').value);
@@ -174,6 +201,9 @@ function animateTransaction() {
         alert(`No path found for the payment of ${formatCapacity(paymentAmount)}. Try a smaller amount or choose different nodes.`);
         return;
     }
+
+    clearHighlights();
+    highlightPath(path);
 
     const transaction = document.createElement('div');
     transaction.className = 'transaction';
