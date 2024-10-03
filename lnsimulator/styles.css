@@ -52,9 +52,22 @@ select, button {
 
 .channel {
     position: absolute;
-    background-color: #2ecc71;
     transform-origin: 0 50%;
     transition: opacity 0.2s;
+    overflow: hidden;
+}
+
+.channel-balance {
+    height: 100%;
+    float: left;
+}
+
+.balance1 {
+    background-color: #3498db;
+}
+
+.balance2 {
+    background-color: #2ecc71;
 }
 
 .channel:hover {
