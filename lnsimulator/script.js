@@ -42,18 +42,19 @@ function generateNetwork() {
                 const channelClass = getChannelClass(capacity);
                 channel.classList.add(channelClass);
                 const balance1 = Math.floor(capacity * Math.random());
-                channels.push({
+                const channelData = {
                     element: channel,
                     start: i,
                     end: j,
                     capacity: capacity,
                     balance1: balance1,
                     balance2: capacity - balance1,
-                    baseFee: 1000, // 1 satoshi base fee
-                    feeRate: 0.001 // 0.1% fee rate
-                });
+                    baseFee: 1000,
+                    feeRate: 0.001
+                };
+                channels.push(channelData);
 
-                channel.addEventListener('mouseenter', (e) => showTooltip(e, channels[channels.length - 1]));
+                channel.addEventListener('mouseenter', (e) => showTooltip(e, channelData));
                 channel.addEventListener('mouseleave', hideTooltip);
             }
         }
