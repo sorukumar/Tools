@@ -41,9 +41,18 @@ function generateNetwork() {
                 const capacity = generateCapacity();
                 const channelClass = getChannelClass(capacity);
                 channel.classList.add(channelClass);
-                channels.push({element: channel, start: i, end: j, capacity: capacity});
+                channels.push({
+                    element: channel,
+                    start: i,
+                    end: j,
+                    capacity: capacity,
+                    balance1: Math.floor(capacity * Math.random()), // Balance with start node
+                    balance2: capacity - Math.floor(capacity * Math.random()), // Balance with end node
+                    baseFee: 1000, // 1 satoshi base fee
+                    feeRate: 0.001 // 0.1% fee rate
+                });
 
-                channel.addEventListener('mouseenter', (e) => showTooltip(e, capacity));
+                channel.addEventListener('mouseenter', (e) => showTooltip(e, channels[channels.length - 1]));
                 channel.addEventListener('mouseleave', hideTooltip);
             }
         }
@@ -92,11 +101,34 @@ function updateChannels() {
         channel.element.style.left = `${start.left - network.offsetLeft + 15}px`;
         channel.element.style.top = `${start.top - network.offsetTop + 15}px`;
         channel.element.style.transform = `rotate(${angle}deg)`;
+
+        visualizeChannelBalance(channel);
     });
 }
 
-function showTooltip(event, capacity) {
-    tooltip.textContent = `Capacity: ${formatCapacity(capacity)}`;
+function visualizeChannelBalance(channel) {
+    const totalWidth = channel.element.offsetWidth;
+    const balance1Percent = (channel.balance1 / channel.capacity) * 100;
+    
+    const balance1Element = document.createElement('div');
+    balance1Element.className = 'channel-balance balance1';
+    balance1Element.style.width = `${balance1Percent}%`;
+    
+    const balance2Element = document.createElement('div');
+    balance2Element.className = 'channel-balance balance2';
+    balance2Element.style.width = `${100 - balance1Percent}%`;
+    
+    channel.element.innerHTML = '';
+    channel.element.appendChild(balance1Element);
+    channel.element.appendChild(balance2Element);
+}
+
+function showTooltip(event, channel) {
+    tooltip.innerHTML = `
+        Total Capacity: ${formatCapacity(channel.capacity)}<br>
+        Node ${nodes[channel.start].textContent} Balance: ${formatCapacity(channel.balance1)}<br>
+        Node ${nodes[channel.end].textContent} Balance: ${formatCapacity(channel.balance2)}
+    `;
     tooltip.style.left = `${event.pageX + 10}px`;
     tooltip.style.top = `${event.pageY + 10}px`;
     tooltip.style.opacity = 1;
@@ -131,38 +163,43 @@ function getChannelClass(capacity) {
 function findPathWithCapacity(start, end, amount) {
     const visited = new Set();
     const queue = [[start]];
+    const fees = new Map([[start, 0]]);
     
     while (queue.length > 0) {
         const path = queue.shift();
         const node = path[path.length - 1];
         
         if (node === end) {
-            // Check if all channels in the path have sufficient capacity
-            const isPathValid = path.every((node, index) => {
-                if (index === path.length - 1) return true;
-                const channel = channels.find(c => 
-                    (c.start === node && c.end === path[index + 1]) || 
-                    (c.end === node && c.start === path[index + 1])
-                );
-                return channel && channel.capacity >= amount;
-            });
-            
-            if (isPathValid) return path;
+            return { path, totalFees: fees.get(node) };
         }
         
         if (!visited.has(node)) {
             visited.add(node);
             const neighbors = channels
-                .filter(c => (c.start === node || c.end === node) && c.capacity >= amount)
+                .filter(c => {
+                    if (c.start === node && c.balance1 >= amount + fees.get(node)) return true;
+                    if (c.end === node && c.balance2 >= amount + fees.get(node)) return true;
+                    return false;
+                })
                 .map(c => c.start === node ? c.end : c.start);
             
             for (const neighbor of neighbors) {
-                queue.push([...path, neighbor]);
+                const channel = channels.find(c => 
+                    (c.start === node && c.end === neighbor) || 
+                    (c.end === node && c.start === neighbor)
+                );
+                const fee = channel.baseFee + Math.floor((amount + fees.get(node)) * channel.feeRate);
+                const totalFees = fees.get(node) + fee;
+                
+                if (!fees.has(neighbor) || totalFees < fees.get(neighbor)) {
+                    fees.set(neighbor, totalFees);
+                    queue.push([...path, neighbor]);
+                }
             }
         }
     }
     
-    return [];
+    return { path: [], totalFees: 0 };
 }
 
 function highlightPath(path) {
@@ -196,7 +233,7 @@ function animateTransaction() {
         return;
     }
 
-    const path = findPathWithCapacity(senderIndex, receiverIndex, paymentAmount);
+    const { path, totalFees } = findPathWithCapacity(senderIndex, receiverIndex, paymentAmount);
     if (path.length === 0) {
         alert(`No path found for the payment of ${formatCapacity(paymentAmount)}. Try a smaller amount or choose different nodes.`);
         return;
@@ -213,7 +250,8 @@ function animateTransaction() {
     function animate() {
         if (step >= path.length - 1) {
             transaction.remove();
-            alert(`Payment of ${formatCapacity(paymentAmount)} successfully sent from Node ${nodes[senderIndex].textContent} to Node ${nodes[receiverIndex].textContent}`);
+            updateChannelBalances(path, paymentAmount, totalFees);
+            alert(`Payment of ${formatCapacity(paymentAmount)} successfully sent from Node ${nodes[senderIndex].textContent} to Node ${nodes[receiverIndex].textContent}\nTotal fees paid: ${formatCapacity(totalFees)}`);
             return;
         }
 
@@ -253,6 +291,26 @@ function animateTransaction() {
     }
 
     animate();
+}
+
+function updateChannelBalances(path, amount, fees) {
+    for (let i = 0; i < path.length - 1; i++) {
+        const channel = channels.find(c => 
+            (c.start === path[i] && c.end === path[i + 1]) || 
+            (c.end === path[i] && c.start === path[i + 1])
+        );
+        
+        if (channel.start === path[i]) {
+            channel.balance1 -= amount;
+            channel.balance2 += amount;
+        } else {
+            channel.balance2 -= amount;
+            channel.balance1 += amount;
+        }
+        
+        amount += Math.floor(amount * channel.feeRate) + channel.baseFee;
+    }
+    updateChannels();
 }
 
 regenerateButton.addEventListener('click', generateNetwork);
