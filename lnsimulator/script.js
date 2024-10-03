@@ -1,3 +1,8 @@
+// This simulator demonstrates the basic concepts of a Lightning Network:
+// - Nodes: Participants in the network
+// - Channels: Payment channels between nodes
+// - Routing: Finding a path to send payments between nodes
+
 const network = document.getElementById('network');
 const nodeCountSelect = document.getElementById('nodeCount');
 const channelProbabilitySelect = document.getElementById('channelProbability');
@@ -8,6 +13,7 @@ const tooltip = document.getElementById('tooltip');
 let nodes = [];
 let channels = [];
 
+// Generates a random Lightning Network with the specified number of nodes and channel probability
 function generateNetwork() {
     network.innerHTML = '';
     nodes = [];
@@ -45,6 +51,7 @@ function generateNetwork() {
     populateNodeDropdowns();
 }
 
+// Simulates the random capacity of a payment channel
 function generateCapacity() {
     const capacities = [
         5000000, 10000000, 20000000, 30000000, 40000000, 50000000,
@@ -112,6 +119,8 @@ function populateNodeDropdowns() {
     });
 }
 
+// Implements a simple pathfinding algorithm to route payments through the network
+
 function findPathWithCapacity(start, end, amount) {
     const visited = new Set();
     const queue = [[start]];
@@ -149,6 +158,7 @@ function findPathWithCapacity(start, end, amount) {
     return [];
 }
 
+// Simulates and visualizes a payment being routed through the network
 function animateTransaction() {
     const senderIndex = parseInt(document.getElementById('senderNode').value);
     const receiverIndex = parseInt(document.getElementById('receiverNode').value);
