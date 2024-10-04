@@ -27,6 +27,7 @@ header {
     padding: 10px; /* Add some padding */
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     background-color: #f0f0f0; /* Background color for better contrast */
+    height: 100%;
 }
 
 .top-controls {
@@ -66,7 +67,7 @@ select, button {
     background-color: #f9f9f9; /* Background color for the network area */
     border-left: 1px solid #ddd; /* Border to separate from the sidebar */
     position: relative;
-    height: 600px; /* Fixed height for the network area */
+    height: 100%; /* Fixed height for the network area */
     overflow: hidden; /* Hide overflow to keep it tidy */
 }
 
