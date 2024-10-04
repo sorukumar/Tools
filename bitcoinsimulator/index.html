@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Bitcoin Simulator</h1>
+        <div id="wallet">
+            <h2>Your Wallet</h2>
+            <p>Balance: <span id="balance">0</span> BTC</p>
+            <button id="createWallet">Create Wallet</button>
+        </div>
+        <div id="transaction">
+            <h2>Create Transaction</h2>
+            <input type="text" id="recipient" placeholder="Recipient Address">
+            <input type="number" id="amount" placeholder="Amount (BTC)">
+            <button id="sendTransaction">Send Transaction</button>
+        </div>
+        <div id="mining">
+            <h2>Mining</h2>
+            <button id="mineBlock">Mine Block</button>
+            <p id="minedBlock"></p>
+        </div>
+        <div id="transactions">
+            <h2>Pending Transactions</h2>
+            <ul id="transactionList"></ul>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
