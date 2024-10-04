@@ -4,7 +4,7 @@ body {
     padding: 20px;
     display: flex;
     flex-direction: column; /* Stack elements vertically */
-    height: 100vh; /* Full height of the viewport */
+    min-height: 100vh; /* Full height of the viewport */
 }
 
 header {
