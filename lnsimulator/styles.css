@@ -2,6 +2,7 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 20px;
+    display: flex;
 }
 
 header {
@@ -10,7 +11,10 @@ header {
 
 .controls {
     display: flex;
-    flex-direction: column; /* Stack the control groups vertically */
+    flex-direction: column; 
+    width: 250px; /* Set a fixed width for the controls */
+    padding: 10px; /* Add some padding */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
 .top-controls {
@@ -21,8 +25,7 @@ header {
 
 .sidebar-controls {
     display: flex;
-    flex-direction: column; /* Stack items in the sidebar vertically */
-    width: 200px; /* Set a fixed width for the sidebar */
+    flex-direction: column; 
 }
 
 .sidebar-controls label,
@@ -40,9 +43,13 @@ select, button {
 }
 
 .network {
+    flex-grow: 1; /* Allow the network graph to take the remaining space */
+    padding: 10px; /* Add some padding */
+    background-color: #f9f9f9; /* Optional: Background color for the network area */
+    border-left: 1px solid #ddd; /* Optional: Add a border to separate from the sidebar */
     position: relative;
-    width: 800px;
-    height: 600px;
+    width: 800px; /* You can adjust this width as needed */
+    height: 600px; /* You can adjust this height as needed */
     border: 1px solid #ccc;
 }
 
