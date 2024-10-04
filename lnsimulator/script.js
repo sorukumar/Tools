@@ -69,7 +69,7 @@ function generateNetwork() {
 // Simulates the random capacity of a payment channel
 function generateCapacity() {
     const capacities = [
-        5000000, 10000000, 20000000, 30000000, 40000000, 50000000,
+        1000000, 5000000, 10000000, 20000000, 30000000, 40000000, 50000000,
         60000000, 70000000, 80000000, 90000000, 100000000, 200000000
     ];
     return capacities[Math.floor(Math.random() * capacities.length)];
@@ -93,8 +93,8 @@ function updateChannels() {
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
         
         const minWidth = 1;
-        const maxWidth = 10;
-        const minCapacity = 5000000; // 5m sats
+        const maxWidth = 5;
+        const minCapacity = 1000000; // 1m sats
         const maxCapacity = 200000000; // 2 BTC
         
         const logWidth = Math.log(channel.capacity / minCapacity) / Math.log(maxCapacity / minCapacity);
@@ -157,9 +157,9 @@ function populateNodeDropdowns() {
 }
 
 function getChannelClass(capacity) {
-    if (capacity < 20000000) return 'small';
-    if (capacity < 50000000) return 'medium';
-    return 'large';
+    if (capacity < 5000001) return 'Myway';
+    if (capacity < 100000001) return 'Highway';
+    return 'Freeway';
 }
 
 // Implements a simple pathfinding algorithm to route payments through the network
