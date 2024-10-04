@@ -8,7 +8,7 @@ body {
 }
 
 header {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .instructions {
@@ -26,18 +26,24 @@ header {
     width: 250px; /* Fixed width for the controls */
     padding: 10px; /* Add some padding */
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    background-color: #fff; /* Background color for better contrast */
+    background-color: #f0f0f0; /* Background color for better contrast */
 }
 
 .top-controls {
-    display: flex; /* Align items in the top control group horizontally */
-    justify-content: space-between; /* Space out the controls */
-    margin-bottom: 15px; /* Reduced space below the top controls */
+    display: flex; /* Align items in the top control group vertically */
+    flex-direction: column; /* Stack items vertically */
+    margin-bottom: 15px; /* Space below the top controls */
+    background-color: #e0e0e0; /* Different background color for top controls */
+    padding: 10px; /* Padding for top controls */
+    border-radius: 5px; /* Optional: Rounded corners */
 }
 
 .sidebar-controls {
     display: flex;
     flex-direction: column; 
+    background-color: #ffffff; /* Different background color for sidebar controls */
+    padding: 10px; /* Padding for sidebar controls */
+    border-radius: 5px; /* Optional: Rounded corners */
 }
 
 .sidebar-controls label,
