@@ -9,11 +9,26 @@ header {
 }
 
 .controls {
-    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column; /* Stack the control groups vertically */
 }
 
-.control-group {
-    margin-bottom: 10px;
+.top-controls {
+    display: flex; /* Align items in the top control group horizontally */
+    justify-content: space-between; /* Space out the controls */
+    margin-bottom: 20px; /* Add some space below the top controls */
+}
+
+.sidebar-controls {
+    display: flex;
+    flex-direction: column; /* Stack items in the sidebar vertically */
+    width: 200px; /* Set a fixed width for the sidebar */
+}
+
+.sidebar-controls label,
+.sidebar-controls select,
+.sidebar-controls button {
+    margin-bottom: 10px; /* Add space between elements in the sidebar */
 }
 
 label {
