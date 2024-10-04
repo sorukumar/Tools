@@ -65,7 +65,7 @@ function generateNetwork() {
         }
     }
 
-    updateChannels();
+    updateChannels(networkRect); // Pass it to updateChannels
     populateNodeDropdowns();
     validateChannelBalances();
 }
@@ -87,7 +87,7 @@ function formatCapacity(sats) {
     }
 }
 
-function updateChannels() {
+function updateChannels(networkRect) {
     channels.forEach(channel => {
         const start = nodes[channel.start].getBoundingClientRect();
         const end = nodes[channel.end].getBoundingClientRect();
