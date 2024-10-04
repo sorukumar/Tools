@@ -13,6 +13,7 @@ const tooltip = document.getElementById('tooltip');
 let nodes = [];
 let channels = [];
 let transactionHistory = [];
+let networkRect; // Define networkRect globally
 
 // Generates a random Lightning Network with the specified number of nodes and channel probability
 function generateNetwork() {
@@ -65,7 +66,7 @@ function generateNetwork() {
         }
     }
 
-    updateChannels(networkRect); // Pass it to updateChannels
+    updateChannels(); // Pass it to updateChannels
     populateNodeDropdowns();
     validateChannelBalances();
 }
@@ -87,7 +88,7 @@ function formatCapacity(sats) {
     }
 }
 
-function updateChannels(networkRect) {
+function updateChannels() {
     channels.forEach(channel => {
         const start = nodes[channel.start].getBoundingClientRect();
         const end = nodes[channel.end].getBoundingClientRect();
