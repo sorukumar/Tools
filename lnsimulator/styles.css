@@ -3,11 +3,21 @@ body {
     margin: 0;
     padding: 20px;
     display: flex;
-    height: 100vh; /* Make the body take the full height of the viewport */
+    flex-direction: column; /* Stack elements vertically */
+    height: 100vh; /* Full height of the viewport */
 }
 
 header {
     margin-bottom: 20px;
+}
+
+.instructions {
+    margin-bottom: 20px; /* Space between instructions and controls */
+}
+
+.main-container {
+    display: flex; /* Use flexbox for the main container */
+    flex-grow: 1; /* Allow it to take the remaining space */
 }
 
 .controls {
