@@ -9,6 +9,20 @@ header {
     text-align: center;
 }
 
+.instructions-and-legend {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.instructions {
+    margin-bottom: 10px;
+}
+
+.instructions ol {
+    padding-left: 20px;
+}
+
 .main-container {
     display: flex;
     gap: 20px;
@@ -46,6 +60,7 @@ select, button {
 
 .network-container {
     flex-grow: 1;
+    position: relative; /* Ensure the legend can be positioned absolutely within this container */
 }
 
 .network {
@@ -119,24 +134,37 @@ select, button {
 }
 
 .legend {
-    margin-top: 20px;
+    position: absolute; /* Position the legend absolutely within the network container */
+    top: 10px; /* Adjust as needed */
+    left: 10px; /* Adjust as needed */
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background for readability */
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 10; /* Ensure it appears above the network graph */
+}
+
+.legend h3 {
+    margin: 0 0 10px 0; /* Margin adjustments */
 }
 
 .legend ul {
-    list-style-type: none;
-    padding: 0;
+    display: flex; /* Display items in a row */
+    list-style-type: none; /* Remove bullet points */
+    padding: 0; /* Remove padding */
+    margin: 0; /* Remove margin */
 }
 
 .legend li {
-    margin-bottom: 5px;
+    margin-right: 20px; /* Space between legend items */
+    display: flex; /* Align items */
+    align-items: center; /* Center items vertically */
 }
 
 .node-icon, .channel-icon {
     display: inline-block;
     width: 20px;
     height: 20px;
-    margin-right: 10px;
-    vertical-align: middle;
+    margin-right: 5px; /* Space between icon and text */
 }
 
 .node-icon {
@@ -149,23 +177,15 @@ select, button {
 }
 
 .channel-icon.small {
-    height: 2px;
+    height: 2px; /* Height for small channel icon */
 }
 
 .channel-icon.medium {
-    height: 4px;
+    height: 4px; /* Height for medium channel icon */
 }
 
 .channel-icon.large {
-    height: 6px;
-}
-
-.instructions {
-    margin-top: 20px;
-}
-
-.instructions ol {
-    padding-left: 20px;
+    height: 6px; /* Height for large channel icon */
 }
 
 .highlighted {
