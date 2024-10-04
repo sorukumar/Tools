@@ -1,47 +1,96 @@
-let balance = 0;
-let transactions = [];
-let walletAddress = '';
+// Simple SHA-256 hash function (for demonstration purposes)
+function sha256(ascii) {
+    const crypto = require('crypto');
+    return crypto.createHash('sha256').update(ascii).digest('hex');
+}
 
-document.getElementById('createWallet').addEventListener('click', () => {
-    walletAddress = 'Wallet-' + Math.random().toString(36).substring(2, 15);
-    balance = 100; // Starting balance for the wallet
-    document.getElementById('balance').innerText = balance;
-    alert(`Wallet created: ${walletAddress}`);
-});
+let blockchain = [];
+let transactionPool = [];
+let mining = false;
+const miningReward = 10; // Reward for mining a block
 
-document.getElementById('sendTransaction').addEventListener('click', () => {
+document.getElementById('addTransaction').addEventListener('click', () => {
     const recipient = document.getElementById('recipient').value;
     const amount = parseFloat(document.getElementById('amount').value);
 
-    if (!recipient || isNaN(amount) || amount <= 0 || amount > balance) {
+    if (!recipient || isNaN(amount) || amount <= 0) {
         alert('Invalid transaction details.');
         return;
     }
 
-    transactions.push({ recipient, amount });
-    balance -= amount;
-    document.getElementById('balance').innerText = balance;
+    const transaction = { recipient, amount };
+    transactionPool.push(transaction);
     updateTransactionList();
-    alert(`Transaction of ${amount} BTC sent to ${recipient}`);
+    document.getElementById('recipient').value = '';
+    document.getElementById('amount').value = '';
 });
 
-document.getElementById('mineBlock').addEventListener('click', () => {
-    if (transactions.length === 0) {
-        alert('No transactions to mine.');
+document.getElementById('startMining').addEventListener('click', () => {
+    const difficulty = parseInt(document.getElementById('difficulty').value);
+    if (mining) {
+        alert('Mining is already in progress!');
         return;
     }
-
-    const minedBlock = `Mined a block with transactions: ${JSON.stringify(transactions)}`;
-    document.getElementById('minedBlock').innerText = minedBlock;
-    transactions = []; // Clear transactions after mining
-    updateTransactionList();
+    mining = true;
+    mineBlock(difficulty);
 });
+
+function mineBlock(difficulty) {
+    const previousBlock = blockchain[blockchain.length - 1];
+    const index = previousBlock ? previousBlock.index + 1 : 0;
+    const timestamp = new Date().getTime();
+    let nonce = 0;
+    let hash;
+
+    // Include transactions in the block
+    const transactionsToMine = [...transactionPool];
+
+    do {
+        nonce++;
+        hash = sha256(index + timestamp + nonce + (previousBlock ? previousBlock.hash : '') + JSON.stringify(transactionsToMine));
+    } while (hash.substring(0, difficulty) !== '0'.repeat(difficulty));
+
+    const newBlock = {
+        index,
+        timestamp,
+        nonce,
+        hash,
+        previousHash: previousBlock ? previousBlock.hash : '0',
+        transactions: transactionsToMine
+    };
+
+    // Add mining reward transaction
+    const rewardTransaction = { recipient: 'miner', amount: miningReward };
+    blockchain.push(newBlock);
+    transactionPool = []; // Clear the transaction pool after mining
+    updateBlockchainDisplay();
+    updateTransactionList();
+    mining = false;
+    document.getElementById('miningStatus').innerText = `Mined a new block: ${newBlock.hash}`;
+}
+
+function updateBlockchainDisplay() {
+    const blocksDiv = document.getElementById('blocks');
+    blocksDiv.innerHTML = '';
+    blockchain.forEach(block => {
+        const blockDiv = document.createElement('div');
+        blockDiv.innerHTML = `
+            <strong>Block ${block.index}</strong><br>
+            Hash: ${block.hash}<br>
+            Previous Hash: ${block.previousHash}<br>
+            Nonce: ${block.nonce}<br>
+            Timestamp: ${new Date(block.timestamp).toLocaleString()}<br>
+            Transactions: ${JSON.stringify(block.transactions)}<br><br>
+        `;
+        blocksDiv.appendChild(blockDiv);
+    });
+}
 
 function updateTransactionList() {
     const transactionList = document.getElementById('transactionList');
     transactionList.innerHTML = '';
-    transactions.forEach((tx, index) => {
-        const li = document.createElement('li');
+    transactionPool.forEach((tx, index) => {
+        const li = document.createElement('div');
         li.innerText = `Transaction ${index + 1}: ${tx.amount} BTC to ${tx.recipient}`;
         transactionList.appendChild(li);
     });
