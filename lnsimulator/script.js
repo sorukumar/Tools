@@ -12,6 +12,7 @@ const tooltip = document.getElementById('tooltip');
 
 let nodes = [];
 let channels = [];
+let transactionHistory = [];
 
 // Generates a random Lightning Network with the specified number of nodes and channel probability
 function generateNetwork() {
@@ -237,6 +238,15 @@ function animateTransaction() {
 
     const { path, totalFees } = findPathWithCapacity(senderIndex, receiverIndex, paymentAmount);
     if (path.length === 0) {
+        const failedTransaction = {
+            attempt: transactionHistory.length + 1,
+            from: nodes[senderIndex].textContent,
+            to: nodes[receiverIndex].textContent,
+            amount: paymentAmount,
+            status: 'Failed',
+            reason: 'No path found'
+        };
+        addTransactionToHistory(failedTransaction);
         alert(`No path found for the payment of ${formatCapacity(paymentAmount)}. Try a smaller amount or choose different nodes.`);
         return;
     }
@@ -252,8 +262,21 @@ function animateTransaction() {
     function animate() {
         if (step >= path.length - 1) {
             transaction.remove();
-            updateChannelBalances(path, paymentAmount, totalFees);
+            const updatedBalances = updateChannelBalances(path, paymentAmount, totalFees);
             validateChannelBalances();
+            
+            const successfulTransaction = {
+                attempt: transactionHistory.length + 1,
+                from: nodes[senderIndex].textContent,
+                to: nodes[receiverIndex].textContent,
+                amount: paymentAmount,
+                path: path.map(nodeIndex => nodes[nodeIndex].textContent),
+                fees: totalFees,
+                status: 'Success',
+                updatedBalances: updatedBalances
+            };
+            addTransactionToHistory(successfulTransaction);
+            
             alert(`Payment of ${formatCapacity(paymentAmount)} successfully sent from Node ${nodes[senderIndex].textContent} to Node ${nodes[receiverIndex].textContent}\nTotal fees paid: ${formatCapacity(totalFees)}`);
             return;
         }
@@ -298,6 +321,7 @@ function animateTransaction() {
 
 function updateChannelBalances(path, amount, fees) {
     let remainingAmount = amount + fees;
+    const updatedBalances = [];
     for (let i = 0; i < path.length - 1; i++) {
         const channel = channels.find(c => 
             (c.start === path[i] && c.end === path[i + 1]) || 
@@ -315,8 +339,15 @@ function updateChannelBalances(path, amount, fees) {
             channel.balance2 -= amountWithFee;
             channel.balance1 += amountWithFee - fee;
         }
+        
+        updatedBalances.push({
+            channel: `${nodes[channel.start].textContent}-${nodes[channel.end].textContent}`,
+            balance1: channel.balance1,
+            balance2: channel.balance2
+        });
     }
     updateChannels();
+    return updatedBalances;
 }
 
 function validateChannelBalances() {
@@ -325,6 +356,37 @@ function validateChannelBalances() {
             console.error('Invalid channel balance:', channel);
         }
     });
+}
+
+function addTransactionToHistory(transaction) {
+    transactionHistory.push(transaction);
+    updateTransactionTable();
+}
+
+function updateTransactionTable() {
+    const tableBody = document.getElementById('transactionTableBody');
+    tableBody.innerHTML = ''; // Clear existing rows
+
+    transactionHistory.forEach(transaction => {
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+            <td>${transaction.attempt}</td>
+            <td>${transaction.from}</td>
+            <td>${transaction.to}</td>
+            <td>${formatCapacity(transaction.amount)}</td>
+            <td>${transaction.status}</td>
+            <td>${transaction.status === 'Success' ? formatCapacity(transaction.fees) : 'N/A'}</td>
+            <td>${transaction.status === 'Success' ? transaction.path.join(' → ') : 'N/A'}</td>
+            <td>${transaction.status === 'Success' ? formatUpdatedBalances(transaction.updatedBalances) : 'N/A'}</td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
+}
+
+function formatUpdatedBalances(balances) {
+    return balances.map(b => `${b.channel}: ${formatCapacity(b.balance1)} | ${formatCapacity(b.balance2)}`).join('<br>');
 }
 
 regenerateButton.addEventListener('click', generateNetwork);
