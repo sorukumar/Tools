@@ -1,7 +1,7 @@
 body {
     font-family: Arial, sans-serif;
     margin: 0;
-    padding: 20px;
+    padding: 10px;
     display: flex;
     flex-direction: column; /* Stack elements vertically */
     height: 100vh; /* Full height of the viewport */
@@ -72,7 +72,7 @@ select, button {
     background-color: #f9f9f9; /* Background color for the network area */
     border-left: 1px solid #ddd; /* Border to separate from the sidebar */
     position: relative;
-    height: 0; /* Fixed height for the network area */
+    height: 100%; /* Fixed height for the network area */
     overflow: hidden; /* Hide overflow to keep it tidy */
 }
 
