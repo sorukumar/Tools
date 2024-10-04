@@ -20,6 +20,11 @@ header {
     flex-grow: 1; /* Allow it to take the remaining space */
 }
 
+.graph-and-table {
+    display: flex;
+    flex-direction: column; /* Stack the graph and table vertically */
+    flex-grow: 1; /* Allow the graph and table to take the remaining space */
+}
 .controls {
     display: flex;
     flex-direction: column; 
@@ -67,7 +72,7 @@ select, button {
     background-color: #f9f9f9; /* Background color for the network area */
     border-left: 1px solid #ddd; /* Border to separate from the sidebar */
     position: relative;
-    height: 100%; /* Fixed height for the network area */
+    height: 0; /* Fixed height for the network area */
     overflow: hidden; /* Hide overflow to keep it tidy */
 }
 
