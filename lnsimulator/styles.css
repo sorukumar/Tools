@@ -6,28 +6,10 @@ body {
 
 header {
     margin-bottom: 20px;
-    text-align: center;
 }
 
-.main-container {
-    display: flex;
-    gap: 20px;
-}
-
-.sidebar {
-    width: 250px;
-    flex-shrink: 0;
-}
-
-.control-box {
+.controls {
     margin-bottom: 20px;
-    background-color: #f9f9f9;
-    padding: 15px;
-    border-radius: 5px;
-}
-
-.control-box h3 {
-    margin-top: 0;
 }
 
 .control-group {
@@ -35,22 +17,16 @@ header {
 }
 
 label {
-    display: block;
-    margin-bottom: 5px;
+    margin-right: 10px;
 }
 
 select, button {
-    width: 100%;
-    margin-bottom: 10px;
-}
-
-.network-container {
-    flex-grow: 1;
+    margin-right: 20px;
 }
 
 .network {
     position: relative;
-    width: 100%;
+    width: 800px;
     height: 600px;
     border: 1px solid #ccc;
 }
