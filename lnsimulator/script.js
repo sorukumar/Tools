@@ -24,9 +24,12 @@ function generateNetwork() {
     const numNodes = parseInt(nodeCountSelect.value);
     const channelProbability = parseFloat(channelProbabilitySelect.value);
 
-    const networkRect = network.getBoundingClientRect();
+    networkRect = network.getBoundingClientRect();
+    
     const networkWidth = networkRect.width;
     const networkHeight = networkRect.height;
+
+    
 
     for (let i = 0; i < numNodes; i++) {
         const node = document.createElement('div');
