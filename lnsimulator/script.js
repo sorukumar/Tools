@@ -3,7 +3,7 @@
 // - Channels: Payment channels between nodes
 // - Routing: Finding a path to send payments between nodes
 
-const network = document.getElementById('network');
+const network = document.querySelector('.network');
 const nodeCountSelect = document.getElementById('nodeCount');
 const channelProbabilitySelect = document.getElementById('channelProbability');
 const regenerateButton = document.getElementById('regenerate');
@@ -23,12 +23,16 @@ function generateNetwork() {
     const numNodes = parseInt(nodeCountSelect.value);
     const channelProbability = parseFloat(channelProbabilitySelect.value);
 
+    const networkRect = network.getBoundingClientRect();
+    const networkWidth = networkRect.width;
+    const networkHeight = networkRect.height;
+
     for (let i = 0; i < numNodes; i++) {
         const node = document.createElement('div');
         node.className = 'node';
         node.textContent = String.fromCharCode(65 + i % 26) + (i >= 26 ? Math.floor(i / 26) : '');
-        node.style.left = `${Math.random() * 760}px`;
-        node.style.top = `${Math.random() * 560}px`;
+        node.style.left = `${Math.random() * (networkWidth - 30)}px`;
+        node.style.top = `${Math.random() * (networkHeight - 30)}px`;
         network.appendChild(node);
         nodes.push(node);
     }
@@ -102,8 +106,8 @@ function updateChannels() {
         
         channel.element.style.width = `${length}px`;
         channel.element.style.height = `${width}px`;
-        channel.element.style.left = `${start.left - network.offsetLeft + 15}px`;
-        channel.element.style.top = `${start.top - network.offsetTop + 15}px`;
+        channel.element.style.left = `${start.left - networkRect.left + 15}px`;
+        channel.element.style.top = `${start.top - networkRect.top + 15}px`;
         channel.element.style.transform = `rotate(${angle}deg)`;
 
         visualizeChannelBalance(channel);
@@ -285,10 +289,10 @@ function animateTransaction() {
         const endNode = nodes[path[step + 1]];
         const start = startNode.getBoundingClientRect();
         const end = endNode.getBoundingClientRect();
-        const startX = start.left - network.offsetLeft + 15;
-        const startY = start.top - network.offsetTop + 15;
-        const endX = end.left - network.offsetLeft + 15;
-        const endY = end.top - network.offsetTop + 15;
+        const startX = start.left - networkRect.left + 15;
+        const startY = start.top - networkRect.top + 15;
+        const endX = end.left - networkRect.left + 15;
+        const endY = end.top - networkRect.top + 15;
 
         transaction.style.display = 'block';
         transaction.style.left = `${startX}px`;
@@ -394,3 +398,8 @@ sendPaymentButton.addEventListener('click', animateTransaction);
 
 // Initial network generation
 generateNetwork();
+
+// Add a window resize event listener to update the network when the window is resized
+window.addEventListener('resize', () => {
+    updateChannels();
+});
