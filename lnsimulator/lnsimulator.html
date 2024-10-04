@@ -12,93 +12,98 @@
         <p>This interactive simulator helps you understand how payments are routed through a Lightning Network. Experiment with different network configurations and see how payments find their way from sender to receiver!</p>
     </header>
 
-    <div class="controls">
-        <div class="control-group">
-            <label for="nodeCount">Number of Nodes:</label>
-            <select id="nodeCount">
-                <option value="5">5</option>
-                <option value="7">7</option>
-                <option value="10">10</option>
-                <option value="12">12</option>
-                <option value="15">15</option>
-                <option value="21">21</option>
-            </select>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="control-box">
+                <h3>Network Configuration</h3>
+                <label for="nodeCount">Number of Nodes:</label>
+                <select id="nodeCount">
+                    <option value="5">5</option>
+                    <option value="7">7</option>
+                    <option value="10">10</option>
+                    <option value="12">12</option>
+                    <option value="15">15</option>
+                    <option value="21">21</option>
+                </select>
 
-            <label for="channelProbability">Channel Probability:</label>
-            <select id="channelProbability">
-                <option value="0.1">10%</option>
-                <option value="0.2">20%</option>
-                <option value="0.3">30%</option>
-                <option value="0.4">40%</option>
-                <option value="0.5">50%</option>
-            </select>
+                <label for="channelProbability">Channel Probability:</label>
+                <select id="channelProbability">
+                    <option value="0.1">10%</option>
+                    <option value="0.2">20%</option>
+                    <option value="0.3">30%</option>
+                    <option value="0.4">40%</option>
+                    <option value="0.5">50%</option>
+                </select>
 
-            <button id="regenerate">Regenerate Network</button>
+                <button id="regenerate">Regenerate Network</button>
+            </div>
+
+            <div class="control-box">
+                <h3>Payment Simulation</h3>
+                <label for="senderNode">Sender Node:</label>
+                <select id="senderNode"></select>
+
+                <label for="receiverNode">Receiver Node:</label>
+                <select id="receiverNode"></select>
+
+                <label for="paymentAmount">Payment Amount:</label>
+                <select id="paymentAmount">
+                    <option value="1000000">1m sats</option>
+                    <option value="5000000">5m sats</option>
+                    <option value="10000000">10m sats</option>
+                    <option value="50000000">50m sats</option>
+                    <option value="100000000">100m sats</option>
+                    <option value="200000000">200m sats</option>
+                </select>
+
+                <button id="sendPayment">Send Payment</button>
+            </div>
+
+            <div class="legend">
+                <h3>Legend:</h3>
+                <ul>
+                    <li><span class="node-icon"></span> Node</li>
+                    <li><span class="channel-icon small"></span>Myway Channel (Size <= 5m sats)</li>
+                    <li><span class="channel-icon medium"></span>Highway (Channel Size > 5m sats) </li>
+                    <li><span class="channel-icon large"></span>Freeway (Channel size > 1BTC) </li>
+                </ul>
+            </div>
+
+            <div class="instructions">
+                <h3>How to use:</h3>
+                <ol>
+                    <li>Choose the number of nodes and channel probability, then click "Regenerate Network".</li>
+                    <li>Select a sender node, receiver node, and payment amount.</li>
+                    <li>Click "Send Payment" to see the payment route through the network.</li>
+                </ol>
+            </div>
         </div>
 
-        <div class="control-group">
-            <label for="senderNode">Sender Node:</label>
-            <select id="senderNode"></select>
-
-            <label for="receiverNode">Receiver Node:</label>
-            <select id="receiverNode"></select>
-
-            <label for="paymentAmount">Payment Amount:</label>
-            <select id="paymentAmount">
-                <option value="1000000">1m sats</option>
-                <option value="5000000">5m sats</option>
-                <option value="10000000">10m sats</option>
-                <option value="50000000">50m sats</option>
-                <option value="100000000">100m sats</option>
-                <option value="200000000">200m sats</option>
-            </select>
-
-            <button id="sendPayment">Send Payment</button>
+        <div class="network-container">
+            <div class="network" id="network"></div>
+            <div class="tooltip" id="tooltip"></div>
         </div>
     </div>
 
-    <div class="legend">
-        <h3>Legend:</h3>
-        <ul>
-            <li><span class="node-icon"></span> Node</li>
-            <li><span class="channel-icon small"></span>Myway Channel Size <= 5m sats)</li>
-            <li><span class="channel-icon medium"></span>Highway (Channel Size > 5m sats) </li>
-            <li><span class="channel-icon large"></span>Freeway (Channel size > 1BTC) </li>
-        </ul>
-    </div>
-
-    <div class="instructions">
-        <h3>How to use:</h3>
-        <ol>
-            <li>Choose the number of nodes and channel probability, then click "Regenerate Network".</li>
-            <li>Select a sender node, receiver node, and payment amount.</li>
-            <li>Click "Send Payment" to see the payment route through the network.</li>
-        </ol>
-    </div>
-
-    <div class="network" id="network"></div>
-    <div class="tooltip" id="tooltip"></div>
-    <!-- New transaction table section -->
     <div class="transaction-table-container">
-    <h3>Transaction History</h3>
-    <table id="transactionTable">
-        <thead>
-            <tr>
-                <th>Attempt</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Fees</th>
-                <th>Path</th>
-                <th>Updated Balances</th>
-            </tr>
-        </thead>
-        <tbody id="transactionTableBody">
-            <!-- Transaction rows will be inserted here -->
-        </tbody>
-    </table>
-</div>
+        <h3>Transaction History</h3>
+        <table id="transactionTable">
+            <thead>
+                <tr>
+                    <th>Attempt</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Fees</th>
+                    <th>Path</th>
+                    <th>Updated Balances</th>
+                </tr>
+            </thead>
+            <tbody id="transactionTableBody"></tbody>
+        </table>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
