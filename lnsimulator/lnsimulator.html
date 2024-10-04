@@ -26,7 +26,6 @@
             <div class="control-group top-controls">
                 <label for="nodeCount">Number of Nodes:</label>
                 <select id="nodeCount">
-<!--                     <option value="5">5</option> -->
                     <option value="7">7</option>
                     <option value="9">9</option>
                     <option value="13">13</option>
@@ -36,8 +35,6 @@
 
                 <label for="channelProbability">Channel Probability:</label>
                 <select id="channelProbability">
-<!--                     <option value="0.1">10%</option>
-                    <option value="0.2">20%</option> -->
                     <option value="0.3">30%</option>
                     <option value="0.4">40%</option>
                     <option value="0.5">50%</option>
@@ -56,8 +53,8 @@
                 <label for="paymentAmount">Payment Amount:</label>
                 <select id="paymentAmount">
                     <option value="1000000">1m sats</option>
+                    <option value="3000000">3m sats</option>
                     <option value="5000000">5m sats</option>
-                    <option value="10000000">10m sats</option>
                     <option value="50000000">50m sats</option>
                     <option value="100000000">100m sats</option>
                     <option value="200000000">200m sats</option>
@@ -67,31 +64,32 @@
             </div>
         </div>
 
-        <div class="network" id="network"></div>
+        <div class="graph-and-table">
+            <div class="network" id="network"></div>
+            <div class="transaction-table-container">
+                <h3>Transaction History</h3>
+                <table id="transactionTable">
+                    <thead>
+                        <tr>
+                            <th>Attempt</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Fees</th>
+                            <th>Path</th>
+                            <th>Updated Balances</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody">
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <div class="tooltip" id="tooltip"></div>
-    
-    <div class="transaction-table-container">
-        <h3>Transaction History</h3>
-        <table id="transactionTable">
-            <thead>
-                <tr>
-                    <th>Attempt</th>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Fees</th>
-                    <th>Path</th>
-                    <th>Updated Balances</th>
-                </tr>
-            </thead>
-            <tbody id="transactionTableBody">
-                
-            </tbody>
-        </table>
-    </div>
     <script src="script.js"></script>
 </body>
 </html>
