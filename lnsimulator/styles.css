@@ -155,3 +155,28 @@ select, button {
 .channel.highlighted {
     background-color: #f39c12;
 }
+
+.transaction-table-container {
+    margin-top: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#transactionTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#transactionTable th, #transactionTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#transactionTable th {
+    background-color: #f2f2f2;
+}
+
+#transactionTable tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
