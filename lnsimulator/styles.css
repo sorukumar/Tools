@@ -3,6 +3,7 @@ body {
     margin: 0;
     padding: 20px;
     display: flex;
+    height: 100vh; /* Make the body take the full height of the viewport */
 }
 
 header {
@@ -12,15 +13,16 @@ header {
 .controls {
     display: flex;
     flex-direction: column; 
-    width: 250px; /* Set a fixed width for the controls */
+    width: 250px; /* Fixed width for the controls */
     padding: 10px; /* Add some padding */
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    background-color: #fff; /* Background color for better contrast */
 }
 
 .top-controls {
     display: flex; /* Align items in the top control group horizontally */
     justify-content: space-between; /* Space out the controls */
-    margin-bottom: 20px; /* Add some space below the top controls */
+    margin-bottom: 15px; /* Reduced space below the top controls */
 }
 
 .sidebar-controls {
@@ -31,26 +33,25 @@ header {
 .sidebar-controls label,
 .sidebar-controls select,
 .sidebar-controls button {
-    margin-bottom: 10px; /* Add space between elements in the sidebar */
+    margin-bottom: 8px; /* Reduced space between elements in the sidebar */
 }
 
 label {
-    margin-right: 10px;
+    margin-right: 5px; /* Reduced margin for a more compact look */
 }
 
 select, button {
-    margin-right: 20px;
+    margin-right: 10px; /* Reduced margin for a more compact look */
 }
 
 .network {
     flex-grow: 1; /* Allow the network graph to take the remaining space */
     padding: 10px; /* Add some padding */
-    background-color: #f9f9f9; /* Optional: Background color for the network area */
-    border-left: 1px solid #ddd; /* Optional: Add a border to separate from the sidebar */
+    background-color: #f9f9f9; /* Background color for the network area */
+    border-left: 1px solid #ddd; /* Border to separate from the sidebar */
     position: relative;
-    width: 800px; /* You can adjust this width as needed */
-    height: 600px; /* You can adjust this height as needed */
-    border: 1px solid #ccc;
+    height: 600px; /* Fixed height for the network area */
+    overflow: hidden; /* Hide overflow to keep it tidy */
 }
 
 .node {
@@ -74,7 +75,7 @@ select, button {
 
 .channel {
     position: absolute;
-    transform-origin: 0 50%;
+    transform-origin: 0 50%; /* Keep this to start from the center */
     transition: opacity 0.2s;
     overflow: hidden;
 }
@@ -117,7 +118,7 @@ select, button {
 }
 
 .legend {
-    margin-top: 20px;
+    margin-top: 15px; /* Reduced margin for a more compact look */
 }
 
 .legend ul {
@@ -159,7 +160,7 @@ select, button {
 }
 
 .instructions {
-    margin-top: 20px;
+    margin-top: 15px; /* Reduced margin for a more compact look */
 }
 
 .instructions ol {
