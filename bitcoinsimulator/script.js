@@ -1,9 +1,3 @@
-// Simple SHA-256 hash function (for demonstration purposes)
-function sha256(ascii) {
-    const crypto = require('crypto');
-    return crypto.createHash('sha256').update(ascii).digest('hex');
-}
-
 let blockchain = [];
 let transactionPool = [];
 let mining = false;
