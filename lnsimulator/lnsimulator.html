@@ -78,7 +78,27 @@
 
     <div class="network" id="network"></div>
     <div class="tooltip" id="tooltip"></div>
-
+    <!-- New transaction table section -->
+    <div class="transaction-table-container">
+    <h3>Transaction History</h3>
+    <table id="transactionTable">
+        <thead>
+            <tr>
+                <th>Attempt</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Fees</th>
+                <th>Path</th>
+                <th>Updated Balances</th>
+            </tr>
+        </thead>
+        <tbody id="transactionTableBody">
+            <!-- Transaction rows will be inserted here -->
+        </tbody>
+    </table>
+</div>
     <script src="script.js"></script>
 </body>
 </html>
