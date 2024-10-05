@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mining Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Mining Simulator</h1>
+        <div class="grid-container">
+            <div class="left-column">
+                <div id="transactionPool">
+                    <h2>Transaction Pool</h2>
+                    <input type="text" id="recipient" placeholder="Recipient Address">
+                    <input type="number" id="amount" placeholder="Amount (BTC)">
+                    <button id="addTransaction">Add Transaction</button>
+                    <div id="transactionList"></div>
+                </div>
+                <div id="mining">
+                    <h2>Mining</h2>
+                    <label for="difficulty">Difficulty:</label>
+                    <input type="number" id="difficulty" value="2" min="1" max="5">
+                    <button id="startMining">Start Mining</button>
+                    <p id="miningStatus"></p>
+                    <div id="miningVisualization"></div>
+                </div>
+            </div>
+            <div class="right-column">
+                <div id="blockchain">
+                    <h2>Blockchain</h2>
+                    <div id="blocks"></div>
+                </div>
+                <div id="hashFormula">
+                    <h2>Hash Calculation Formula</h2>
+                    <p>Hash = SHA256(Index + Timestamp + Nonce + Previous Hash + Transactions)</p>
+                    <h3>Example Calculation</h3>
+                    <p id="exampleCalculation"></p>
+                    <h3>Inputs Used for Hash</h3>
+                    <p id="hashInputs"></p>
+                    <h3>Hash Input Definitions</h3>
+                    <div id="hashDefinitions">
+                        <p><strong>Index:</strong> The block number in the blockchain (starting from 0).</p>
+                        <p><strong>Timestamp:</strong> The time when the block is created, in milliseconds since the Unix epoch.</p>
+                        <p><strong>Nonce:</strong> A number that miners change to find a valid hash.</p>
+                        <p><strong>Previous Hash:</strong> The hash of the previous block in the blockchain.</p>
+                        <p><strong>Transactions:</strong> The list of transactions included in the block.</p>
+                    </div>
+                </div>
+                <div id="explanation">
+                    <h2>Explanation</h2>
+                    <p id="explanationText"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
