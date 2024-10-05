@@ -3,59 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mining Simulator</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
+    <title>Lightning Network Channel ID Decoder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 30px; /* Increased padding for a larger box */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 500px; /* Increased max-width for a larger box */
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            background-color: #e9f7ff;
+        }
+        .explanation {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+            text-align: left; /* Align text to the left for better readability */
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Mining Simulator</h1>
-        <div class="grid-container">
-            <div class="left-column">
-                <div id="transactionPool">
-                    <h2>Transaction Pool</h2>
-                    <input type="text" id="recipient" placeholder="Recipient Address">
-                    <input type="number" id="amount" placeholder="Amount (BTC)">
-                    <button id="addTransaction">Add Transaction</button>
-                    <div id="transactionList"></div>
-                </div>
-                <div id="mining">
-                    <h2>Mining</h2>
-                    <label for="difficulty">Difficulty:</label>
-                    <input type="number" id="difficulty" value="2" min="1" max="5">
-                    <button id="startMining">Start Mining</button>
-                    <p id="miningStatus"></p>
-                    <div id="miningVisualization"></div>
-                </div>
-            </div>
-            <div class="right-column">
-                <div id="blockchain">
-                    <h2>Blockchain</h2>
-                    <div id="blocks"></div>
-                </div>
-                <div id="hashFormula">
-                    <h2>Hash Calculation Formula</h2>
-                    <p>Hash = SHA256(Index + Timestamp + Nonce + Previous Hash + Transactions)</p>
-                    <h3>Example Calculation</h3>
-                    <p id="exampleCalculation"></p>
-                    <h3>Inputs Used for Hash</h3>
-                    <p id="hashInputs"></p>
-                    <h3>Hash Input Definitions</h3>
-                    <div id="hashDefinitions">
-                        <p><strong>Index:</strong> The block number in the blockchain (starting from 0).</p>
-                        <p><strong>Timestamp:</strong> The time when the block is created, in milliseconds since the Unix epoch.</p>
-                        <p><strong>Nonce:</strong> A number that miners change to find a valid hash.</p>
-                        <p><strong>Previous Hash:</strong> The hash of the previous block in the blockchain.</p>
-                        <p><strong>Transactions:</strong> The list of transactions included in the block.</p>
-                    </div>
-                </div>
-                <div id="explanation">
-                    <h2>Explanation</h2>
-                    <p id="explanationText"></p>
-                </div>
-            </div>
-        </div>
+        <h1>Lightning Channel ID Decoder</h1>
+        <p class="explanation">
+            The Lightning Network (LN) uses short channel IDs as unique identifiers for payment channels. 
+            This converter helps you transform a short channel ID into its corresponding components:
+        </p>
+        <ul class="explanation">
+            <li><strong>Block:</strong> The block height where the funding transaction of the channel was confirmed.</li>
+            <li><strong>Transaction:</strong> The transaction index within that block.</li>
+            <li><strong>Output:</strong> The output index of the funding transaction.</li>
+        </ul>
+        <p class="explanation">
+            For example, the short channel ID 
+            <a href="https://mempool.space/lightning/channel/880174451395198976" target="_blank">880174451395198976</a> 
+            is an identifier of a channel in LN gossip data. By using this converter, you can extract the block, transaction, and output information. This is what we see in various LN explorers.
+        </p>
+        <p class="explanation">
+            The result will be displayed in the format: <strong>(Block x Transaction x Output)</strong>, for example: <strong>(800514 x 3017 x 0)</strong>.
+        </p>
+        <p class="explanation">
+            For more details, refer to the <a href="https://github.com/lightning/bolts/blob/master/07-routing-gossip.md" target="_blank">Lightning Network documentation</a>.
+        </p>
+        <label for="channelId">Enter Channel ID (Decimal):</label>
+        <input type="text" id="channelId" placeholder="e.g., 880174451395198976">
+        <button onclick="convertChannelId()">Convert</button>
+
+        <div class="result" id="result" style="display:none;"></div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        function extractBlockTxOutput(idValue) {
+            const block = idValue >> 40n; // Extract block using BigInt
+            const tx = (idValue >> 16n) & 0xFFFFFFn; // Extract transaction using BigInt
+            const output = idValue & 0xFFFFn; // Extract output using BigInt
+            console.log(`ID Value: ${idValue}, Block: ${block}, Transaction: ${tx}, Output: ${output}`); // Debugging log
+            return { block, tx, output };
+        }
+
+        function convertChannelId() {
+            const input = document.getElementById('channelId').value.trim();
+            const idValue = BigInt(input); // Convert string to BigInt
+
+            // Check if the input is a valid number
+            if (!/^\d+$/.test(input)) {
+                alert("Please enter a valid decimal channel ID.");
+                return;
+            }
+
+            const { block, tx, output } = extractBlockTxOutput(idValue);
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <strong>Results:</strong><br>
+                Block: ${block}<br>
+                Transaction: ${tx}<br>
+                Output: ${output}<br>
+                Block-TX-Output: (${block} x ${tx} x ${output})
+            `;
+        }
+    </script>
 </body>
 </html>
