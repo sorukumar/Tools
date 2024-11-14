@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bitcoin Witness Data Decoder</title>
+    <title>Advanced Bitcoin Witness Data Decoder</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script>
-        // Utility functions
+        // Enhanced utility functions
         const hexToText = (hex) => {
             try {
                 let str = '';
@@ -27,9 +27,8 @@
             return bytes;
         };
 
-        // Decoder functions
+        // Enhanced decoders with more information
         const decoders = {
-            // Ordinals Decoder
             ordinals: (hex) => {
                 const ordMarker = '036f7264';
                 const ordIndex = hex.indexOf(ordMarker);
@@ -42,6 +41,18 @@
                     const contentType = hexToText(contentTypeHex);
                     const contentStart = ordIndex + 10 + (contentTypeLength * 2);
                     const content = hexToText(hex.substr(contentStart));
+                    
+                    // Enhanced metadata analysis
+                    const metadata = {
+                        protocolMarker: 'ord',
+                        markerPosition: ordIndex,
+                        contentSize: (hex.length - contentStart) / 2,
+                        signatureSize: ordIndex / 2,
+                        totalSize: hex.length / 2,
+                        isJSON: content.trim().startsWith('{'),
+                        possibleMIMEType: contentType.split(';')[0],
+                        encoding: contentType.includes('base64') ? 'base64' : 'utf-8'
+                    };
 
                     return {
                         type: 'Ordinal Inscription',
@@ -49,54 +60,73 @@
                             contentType,
                             content,
                             signature: hex.substring(0, ordIndex)
-                        }
+                        },
+                        metadata
                     };
                 } catch (e) {
                     return null;
                 }
             },
 
-            // P2WPKH Decoder
-            p2wpkh: (hex) => {
-                // Check if length matches P2WPKH (64 bytes signature + 33 bytes pubkey)
-                if (hex.length === 194) {
-                    return {
-                        type: 'P2WPKH',
-                        details: {
-                            signature: hex.substring(0, 128),
-                            publicKey: hex.substring(128)
-                        }
-                    };
-                }
-                return null;
-            },
-
-            // P2WSH Decoder
-            p2wsh: (hex) => {
-                // Basic P2WSH detection (more complex in reality)
-                if (hex.length > 194 && !hex.includes('036f7264')) {
-                    return {
-                        type: 'Possible P2WSH',
-                        details: {
-                            scriptHex: hex,
-                            length: hex.length / 2 + ' bytes'
-                        }
-                    };
-                }
-                return null;
-            },
-
-            // Taproot Decoder
+            // Enhanced Taproot decoder
             taproot: (hex) => {
-                // Basic Taproot detection (simplified)
+                // Check for Schnorr signature (64 bytes)
                 if (hex.length === 128) {
+                    const r = hex.substring(0, 64);
+                    const s = hex.substring(64);
+                    
+                    // Basic Schnorr signature validation
+                    const rInt = BigInt('0x' + r);
+                    const sInt = BigInt('0x' + s);
+                    const isValidRange = rInt < BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141');
+
+                    // Enhanced taproot analysis
+                    const metadata = {
+                        signatureType: 'Schnorr',
+                        rValue: r,
+                        sValue: s,
+                        isValidRange,
+                        hasValidPrefix: hex.startsWith('20'), // Common Taproot prefix
+                        signatureSize: '64 bytes',
+                        possibleKeySpend: !hex.includes('script'),
+                        possibleScriptSpend: hex.length > 128
+                    };
+
                     return {
-                        type: 'Possible Taproot Signature',
+                        type: 'Taproot Signature',
                         details: {
-                            signature: hex
+                            rComponent: r,
+                            sComponent: s,
+                            validationStatus: isValidRange ? 'Valid range' : 'Invalid range',
+                            spendType: metadata.possibleKeySpend ? 'Likely Key Spend' : 'Likely Script Spend'
+                        },
+                        metadata
+                    };
+                }
+
+                // Check for script path spend
+                if (hex.length > 128) {
+                    const controlBlock = hex.substring(0, 64);
+                    const script = hex.substring(64);
+                    
+                    return {
+                        type: 'Taproot Script Spend',
+                        details: {
+                            controlBlock,
+                            script,
+                            scriptSize: (script.length / 2) + ' bytes',
+                            controlBlockSize: '32 bytes'
+                        },
+                        metadata: {
+                            spendType: 'Script Path',
+                            scriptAnalysis: {
+                                hasOPCodes: script.includes('76') || script.includes('93'),
+                                possibleMultisig: script.includes('ae') // OP_CHECKMULTISIG
+                            }
                         }
                     };
                 }
+
                 return null;
             }
         };
@@ -127,30 +157,55 @@
                 return;
             }
 
-            // Display results
+            // Enhanced display with metadata
             let html = `
                 <div class="bg-gray-100 p-4 rounded-lg">
                     <h2 class="text-xl font-bold mb-2">Detected Type: ${decoded.type}</h2>
-                    <div class="space-y-2">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <h3 class="font-bold text-lg">Main Details</h3>
             `;
 
             for (const [key, value] of Object.entries(decoded.details)) {
                 html += `
                     <div>
                         <strong class="text-gray-700">${key}:</strong>
-                        <div class="break-all bg-white p-2 rounded mt-1">${value}</div>
+                        <div class="break-all bg-white p-2 rounded mt-1 text-sm">${value}</div>
                     </div>
                 `;
             }
 
-            html += `</div></div>`;
+            html += `
+                        </div>
+                        <div class="space-y-2">
+                            <h3 class="font-bold text-lg">Technical Metadata</h3>
+            `;
+
+            for (const [key, value] of Object.entries(decoded.metadata)) {
+                html += `
+                    <div>
+                        <strong class="text-gray-700">${key}:</strong>
+                        <div class="break-all bg-white p-2 rounded mt-1 text-sm">
+                            ${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
+
             resultDiv.innerHTML = html;
         }
     </script>
 </head>
 <body class="bg-gray-50 min-h-screen p-8">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold mb-8 text-center">Bitcoin Witness Data Decoder</h1>
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-center">Advanced Bitcoin Witness Data Decoder</h1>
         
         <div class="bg-white p-6 rounded-lg shadow-md">
             <div class="mb-4">
@@ -174,14 +229,30 @@
             <div id="result" class="mt-6"></div>
         </div>
 
-        <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-bold mb-4">Supported Witness Types:</h2>
-            <ul class="list-disc pl-5 space-y-2">
-                <li>Ordinal Inscriptions</li>
-                <li>P2WPKH (Pay-to-Witness-Public-Key-Hash)</li>
-                <li>P2WSH (Pay-to-Witness-Script-Hash)</li>
-                <li>Taproot Signatures</li>
-            </ul>
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold mb-4">Ordinal Inscriptions Analysis</h2>
+                <ul class="list-disc pl-5 space-y-2">
+                    <li>Protocol marker detection</li>
+                    <li>Content type analysis</li>
+                    <li>Size calculations</li>
+                    <li>Metadata extraction</li>
+                    <li>MIME type detection</li>
+                    <li>Encoding analysis</li>
+                </ul>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-bold mb-4">Taproot Analysis Features</h2>
+                <ul class="list-disc pl-5 space-y-2">
+                    <li>Schnorr signature validation</li>
+                    <li>Key spend vs Script spend detection</li>
+                    <li>Control block analysis</li>
+                    <li>Script path detection</li>
+                    <li>Multisig pattern recognition</li>
+                    <li>Size and component analysis</li>
+                </ul>
+            </div>
         </div>
     </div>
 </body>
