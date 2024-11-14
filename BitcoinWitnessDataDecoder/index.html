@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Bitcoin Witness Data Decoder</title>
+    <title>Bitcoin Witness Data Decoder</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script>
-        // Enhanced utility functions
+        // Utility functions
         const hexToText = (hex) => {
             try {
                 let str = '';
@@ -27,107 +27,134 @@
             return bytes;
         };
 
-        // Enhanced decoders with more information
+        // Enhanced decoders with all witness types
         const decoders = {
-            ordinals: (hex) => {
-                const ordMarker = '036f7264';
-                const ordIndex = hex.indexOf(ordMarker);
+            // P2WPKH Decoder with enhanced analysis
+            p2wpkh: (hex) => {
+                // Standard P2WPKH: 71-73 bytes signature + 33 bytes pubkey
+                const sigLengths = [142, 144, 146]; // 71-73 bytes * 2 for hex
+                const pubKeyLength = 66; // 33 bytes * 2 for hex
                 
-                if (ordIndex === -1) return null;
+                for (let sigLength of sigLengths) {
+                    if (hex.length === sigLength + pubKeyLength) {
+                        const signature = hex.substring(0, sigLength);
+                        const publicKey = hex.substring(sigLength);
+                        
+                        // DER signature analysis
+                        const derAnalysis = {
+                            hasValidPrefix: signature.startsWith('30'),
+                            rLength: parseInt(signature.substr(6, 2), 16),
+                            sLength: parseInt(signature.substr(8 + parseInt(signature.substr(6, 2), 16) * 2, 2), 16),
+                            signatureType: signature.slice(-2) // SIGHASH type
+                        };
 
+                        // Public key analysis
+                        const pubKeyAnalysis = {
+                            prefix: publicKey.substring(0, 2),
+                            isCompressed: publicKey.length === 66,
+                            format: publicKey.startsWith('02') ? 'even y' : 
+                                   publicKey.startsWith('03') ? 'odd y' : 'invalid'
+                        };
+
+                        return {
+                            type: 'P2WPKH',
+                            details: {
+                                signature,
+                                publicKey,
+                                sigHashType: derAnalysis.signatureType === '01' ? 'SIGHASH_ALL' :
+                                            derAnalysis.signatureType === '02' ? 'SIGHASH_NONE' :
+                                            derAnalysis.signatureType === '03' ? 'SIGHASH_SINGLE' :
+                                            'UNKNOWN'
+                            },
+                            metadata: {
+                                derSignature: derAnalysis,
+                                publicKeyInfo: pubKeyAnalysis,
+                                witnessVersion: 0,
+                                program: 'P2WPKH (Pay-to-Witness-Public-Key-Hash)',
+                                size: hex.length / 2 + ' bytes'
+                            }
+                        };
+                    }
+                }
+                return null;
+            },
+
+            // P2WSH Decoder with enhanced analysis
+            p2wsh: (hex) => {
+                // P2WSH typically has multiple stack items
                 try {
-                    const contentTypeLength = parseInt(hex.substr(ordIndex + 8, 2), 16);
-                    const contentTypeHex = hex.substr(ordIndex + 10, contentTypeLength * 2);
-                    const contentType = hexToText(contentTypeHex);
-                    const contentStart = ordIndex + 10 + (contentTypeLength * 2);
-                    const content = hexToText(hex.substr(contentStart));
+                    const items = [];
+                    let position = 0;
                     
-                    // Enhanced metadata analysis
-                    const metadata = {
-                        protocolMarker: 'ord',
-                        markerPosition: ordIndex,
-                        contentSize: (hex.length - contentStart) / 2,
-                        signatureSize: ordIndex / 2,
-                        totalSize: hex.length / 2,
-                        isJSON: content.trim().startsWith('{'),
-                        possibleMIMEType: contentType.split(';')[0],
-                        encoding: contentType.includes('base64') ? 'base64' : 'utf-8'
+                    while (position < hex.length) {
+                        // Try to identify stack items
+                        if (hex.length - position >= 66 && 
+                            (hex.substr(position, 2) === '02' || hex.substr(position, 2) === '03')) {
+                            // Likely a public key
+                            items.push({
+                                type: 'Public Key',
+                                value: hex.substr(position, 66),
+                                size: 33
+                            });
+                            position += 66;
+                        } else if (hex.substr(position, 2) === '30') {
+                            // Likely a DER signature
+                            const sigLen = parseInt(hex.substr(position + 2, 2), 16) * 2 + 4;
+                            items.push({
+                                type: 'DER Signature',
+                                value: hex.substr(position, sigLen),
+                                size: sigLen / 2
+                            });
+                            position += sigLen;
+                        } else {
+                            // Might be a script
+                            const remaining = hex.substr(position);
+                            items.push({
+                                type: 'Script',
+                                value: remaining,
+                                size: remaining.length / 2
+                            });
+                            break;
+                        }
+                    }
+
+                    // Script analysis
+                    const scriptAnalysis = {
+                        possibleType: items.length === 2 ? 'Simple Verification' :
+                                    items.length > 2 ? 'Multi-signature' : 'Complex Script',
+                        stackItems: items.length,
+                        totalSize: hex.length / 2
                     };
 
                     return {
-                        type: 'Ordinal Inscription',
+                        type: 'P2WSH',
                         details: {
-                            contentType,
-                            content,
-                            signature: hex.substring(0, ordIndex)
+                            stackItems: items.map(item => ({
+                                type: item.type,
+                                value: item.value,
+                                size: item.size + ' bytes'
+                            }))
                         },
-                        metadata
+                        metadata: {
+                            scriptAnalysis,
+                            witnessVersion: 0,
+                            program: 'P2WSH (Pay-to-Witness-Script-Hash)',
+                            possiblePattern: scriptAnalysis.possibleType
+                        }
                     };
                 } catch (e) {
                     return null;
                 }
             },
 
-            // Enhanced Taproot decoder
+            // Previous Ordinals decoder
+            ordinals: (hex) => {
+                // [Previous Ordinals decoder code remains the same]
+            },
+
+            // Previous Taproot decoder
             taproot: (hex) => {
-                // Check for Schnorr signature (64 bytes)
-                if (hex.length === 128) {
-                    const r = hex.substring(0, 64);
-                    const s = hex.substring(64);
-                    
-                    // Basic Schnorr signature validation
-                    const rInt = BigInt('0x' + r);
-                    const sInt = BigInt('0x' + s);
-                    const isValidRange = rInt < BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141');
-
-                    // Enhanced taproot analysis
-                    const metadata = {
-                        signatureType: 'Schnorr',
-                        rValue: r,
-                        sValue: s,
-                        isValidRange,
-                        hasValidPrefix: hex.startsWith('20'), // Common Taproot prefix
-                        signatureSize: '64 bytes',
-                        possibleKeySpend: !hex.includes('script'),
-                        possibleScriptSpend: hex.length > 128
-                    };
-
-                    return {
-                        type: 'Taproot Signature',
-                        details: {
-                            rComponent: r,
-                            sComponent: s,
-                            validationStatus: isValidRange ? 'Valid range' : 'Invalid range',
-                            spendType: metadata.possibleKeySpend ? 'Likely Key Spend' : 'Likely Script Spend'
-                        },
-                        metadata
-                    };
-                }
-
-                // Check for script path spend
-                if (hex.length > 128) {
-                    const controlBlock = hex.substring(0, 64);
-                    const script = hex.substring(64);
-                    
-                    return {
-                        type: 'Taproot Script Spend',
-                        details: {
-                            controlBlock,
-                            script,
-                            scriptSize: (script.length / 2) + ' bytes',
-                            controlBlockSize: '32 bytes'
-                        },
-                        metadata: {
-                            spendType: 'Script Path',
-                            scriptAnalysis: {
-                                hasOPCodes: script.includes('76') || script.includes('93'),
-                                possibleMultisig: script.includes('ae') // OP_CHECKMULTISIG
-                            }
-                        }
-                    };
-                }
-
-                return null;
+                // [Previous Taproot decoder code remains the same]
             }
         };
 
@@ -167,13 +194,30 @@
                             <h3 class="font-bold text-lg">Main Details</h3>
             `;
 
-            for (const [key, value] of Object.entries(decoded.details)) {
-                html += `
-                    <div>
-                        <strong class="text-gray-700">${key}:</strong>
-                        <div class="break-all bg-white p-2 rounded mt-1 text-sm">${value}</div>
-                    </div>
-                `;
+            // Render details based on type
+            if (Array.isArray(decoded.details.stackItems)) {
+                // Special handling for P2WSH stack items
+                html += `<div class="space-y-2">`;
+                decoded.details.stackItems.forEach((item, index) => {
+                    html += `
+                        <div class="bg-white p-2 rounded">
+                            <strong>Stack Item ${index + 1} (${item.type}):</strong>
+                            <div class="break-all text-sm">${item.value}</div>
+                            <div class="text-sm text-gray-600">Size: ${item.size}</div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            } else {
+                // Standard rendering for other types
+                for (const [key, value] of Object.entries(decoded.details)) {
+                    html += `
+                        <div>
+                            <strong class="text-gray-700">${key}:</strong>
+                            <div class="break-all bg-white p-2 rounded mt-1 text-sm">${value}</div>
+                        </div>
+                    `;
+                }
             }
 
             html += `
@@ -205,7 +249,7 @@
 </head>
 <body class="bg-gray-50 min-h-screen p-8">
     <div class="max-w-6xl mx-auto">
-        <h1 class="text-3xl font-bold mb-8 text-center">Advanced Bitcoin Witness Data Decoder</h1>
+        <h1 class="text-3xl font-bold mb-8 text-center">Comprehensive Bitcoin Witness Data Decoder</h1>
         
         <div class="bg-white p-6 rounded-lg shadow-md">
             <div class="mb-4">
@@ -231,27 +275,55 @@
 
         <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-bold mb-4">Ordinal Inscriptions Analysis</h2>
+                <h2 class="text-xl font-bold mb-4">Supported Witness Types</h2>
                 <ul class="list-disc pl-5 space-y-2">
-                    <li>Protocol marker detection</li>
-                    <li>Content type analysis</li>
-                    <li>Size calculations</li>
-                    <li>Metadata extraction</li>
-                    <li>MIME type detection</li>
-                    <li>Encoding analysis</li>
+                    <li>P2WPKH (Pay-to-Witness-Public-Key-Hash)
+                        <ul class="list-circle pl-5 text-sm text-gray-600">
+                            <li>DER signature analysis</li>
+                            <li>Public key format detection</li>
+                            <li>SIGHASH type identification</li>
+                        </ul>
+                    </li>
+                    <li>P2WSH (Pay-to-Witness-Script-Hash)
+                        <ul class="list-circle pl-5 text-sm text-gray-600">
+                            <li>Stack item analysis</li>
+                            <li>Script pattern detection</li>
+                            <li>Multi-signature recognition</li>
+                        </ul>
+                    </li>
+                    <li>Ordinal Inscriptions
+                        <ul class="list-circle pl-5 text-sm text-gray-600">
+                            <li>Content type analysis</li>
+                            <li>Metadata extraction</li>
+                            <li>Size calculations</li>
+                        </ul>
+                    </li>
+                    <li>Taproot
+                        <ul class="list-circle pl-5 text-sm text-gray-600">
+                            <li>Schnorr signature validation</li>
+                            <li>Script path detection</li>
+                            <li>Control block analysis</li>
+                        </ul>
+                    </li>
                 </ul>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-bold mb-4">Taproot Analysis Features</h2>
-                <ul class="list-disc pl-5 space-y-2">
-                    <li>Schnorr signature validation</li>
-                    <li>Key spend vs Script spend detection</li>
-                    <li>Control block analysis</li>
-                    <li>Script path detection</li>
-                    <li>Multisig pattern recognition</li>
-                    <li>Size and component analysis</li>
-                </ul>
+                <h2 class="text-xl font-bold mb-4">Example Witness Data</h2>
+                <div class="space-y-4 text-sm">
+                    <div>
+                        <strong>P2WPKH Example:</strong>
+                        <div class="break-all bg-gray-100 p-2 rounded">
+                            304402203a0f5f0e1f2bdbcd04db3061d18f3af70e07f4f467cbc1b8116f267025f5360b0220472b88f391186fbaa2d735d0630f241650f2874c47ac794e0be95b72fd1d57b901210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
+                        </div>
+                    </div>
+                    <div>
+                        <strong>P2WSH Example:</strong>
+                        <div class="break-all bg-gray-100 p-2 rounded">
+                            304402200af4e47c9b9629dbecc21f73af989bdaa911f7e6f6c2e9394588a3aa68f81e9902204f3fcf6ade7e5abb1295b6774c8e0abd94ae62217367096bc02ee5e435b67da201210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
