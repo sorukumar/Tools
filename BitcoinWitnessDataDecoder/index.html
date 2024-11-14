@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Witness Data Decoder</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script>
+        // Utility functions
+        const hexToText = (hex) => {
+            try {
+                let str = '';
+                for (let i = 0; i < hex.length; i += 2) {
+                    str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+                }
+                return str;
+            } catch (e) {
+                return 'Unable to decode hex to text';
+            }
+        };
+
+        const hexToBytes = (hex) => {
+            const bytes = [];
+            for (let i = 0; i < hex.length; i += 2) {
+                bytes.push(parseInt(hex.substr(i, 2), 16));
+            }
+            return bytes;
+        };
+
+        // Decoder functions
+        const decoders = {
+            // Ordinals Decoder
+            ordinals: (hex) => {
+                const ordMarker = '036f7264';
+                const ordIndex = hex.indexOf(ordMarker);
+                
+                if (ordIndex === -1) return null;
+
+                try {
+                    const contentTypeLength = parseInt(hex.substr(ordIndex + 8, 2), 16);
+                    const contentTypeHex = hex.substr(ordIndex + 10, contentTypeLength * 2);
+                    const contentType = hexToText(contentTypeHex);
+                    const contentStart = ordIndex + 10 + (contentTypeLength * 2);
+                    const content = hexToText(hex.substr(contentStart));
+
+                    return {
+                        type: 'Ordinal Inscription',
+                        details: {
+                            contentType,
+                            content,
+                            signature: hex.substring(0, ordIndex)
+                        }
+                    };
+                } catch (e) {
+                    return null;
+                }
+            },
+
+            // P2WPKH Decoder
+            p2wpkh: (hex) => {
+                // Check if length matches P2WPKH (64 bytes signature + 33 bytes pubkey)
+                if (hex.length === 194) {
+                    return {
+                        type: 'P2WPKH',
+                        details: {
+                            signature: hex.substring(0, 128),
+                            publicKey: hex.substring(128)
+                        }
+                    };
+                }
+                return null;
+            },
+
+            // P2WSH Decoder
+            p2wsh: (hex) => {
+                // Basic P2WSH detection (more complex in reality)
+                if (hex.length > 194 && !hex.includes('036f7264')) {
+                    return {
+                        type: 'Possible P2WSH',
+                        details: {
+                            scriptHex: hex,
+                            length: hex.length / 2 + ' bytes'
+                        }
+                    };
+                }
+                return null;
+            },
+
+            // Taproot Decoder
+            taproot: (hex) => {
+                // Basic Taproot detection (simplified)
+                if (hex.length === 128) {
+                    return {
+                        type: 'Possible Taproot Signature',
+                        details: {
+                            signature: hex
+                        }
+                    };
+                }
+                return null;
+            }
+        };
+
+        function decodeWitnessData() {
+            const witnessData = document.getElementById('witnessInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!witnessData) {
+                resultDiv.innerHTML = '<div class="text-red-500">Please enter witness data</div>';
+                return;
+            }
+
+            const cleaned = witnessData.replace(/\s/g, '');
+            let decoded = null;
+
+            // Try each decoder
+            for (const [name, decoder] of Object.entries(decoders)) {
+                const result = decoder(cleaned);
+                if (result) {
+                    decoded = result;
+                    break;
+                }
+            }
+
+            if (!decoded) {
+                resultDiv.innerHTML = '<div class="text-red-500">Unable to determine witness type</div>';
+                return;
+            }
+
+            // Display results
+            let html = `
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h2 class="text-xl font-bold mb-2">Detected Type: ${decoded.type}</h2>
+                    <div class="space-y-2">
+            `;
+
+            for (const [key, value] of Object.entries(decoded.details)) {
+                html += `
+                    <div>
+                        <strong class="text-gray-700">${key}:</strong>
+                        <div class="break-all bg-white p-2 rounded mt-1">${value}</div>
+                    </div>
+                `;
+            }
+
+            html += `</div></div>`;
+            resultDiv.innerHTML = html;
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-center">Bitcoin Witness Data Decoder</h1>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="witnessInput">
+                    Witness Data (hex):
+                </label>
+                <textarea 
+                    id="witnessInput"
+                    class="w-full p-3 border rounded-lg h-32 font-mono text-sm"
+                    placeholder="Enter witness data in hex format..."
+                ></textarea>
+            </div>
+
+            <button 
+                onclick="decodeWitnessData()"
+                class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+            >
+                Decode
+            </button>
+
+            <div id="result" class="mt-6"></div>
+        </div>
+
+        <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-4">Supported Witness Types:</h2>
+            <ul class="list-disc pl-5 space-y-2">
+                <li>Ordinal Inscriptions</li>
+                <li>P2WPKH (Pay-to-Witness-Public-Key-Hash)</li>
+                <li>P2WSH (Pay-to-Witness-Script-Hash)</li>
+                <li>Taproot Signatures</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
