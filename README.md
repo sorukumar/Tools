@@ -9,3 +9,6 @@ This tool provides an interactive explanation of Bitcoin mining, illustrating ho
 
 ### [Lightning Channel ID Decoder](LNChannelIDDecoder/index.html)
 This tool decodes short channel IDs from the Lightning Network, extracting the block height, transaction index, and output index for better understanding.
+
+### [Bitcoin Witness Data Decoder](BitcoinWitnessDataDecoder/index.html)
+This tool decodes bitoin witness data. Paste witness data and find out the details.
