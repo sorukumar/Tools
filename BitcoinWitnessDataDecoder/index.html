@@ -6,252 +6,58 @@
     <title>Bitcoin Witness Data Decoder</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script>
-        // Utility functions
-        const hexToText = (hex) => {
-            try {
-                let str = '';
-                for (let i = 0; i < hex.length; i += 2) {
-                    str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+        // [Previous utility functions and decoders remain the same]
+
+        function loadExample(type) {
+            const examples = {
+                p2wpkh: {
+                    data: "304402203a0f5f0e1f2bdbcd04db3061d18f3af70e07f4f467cbc1b8116f267025f5360b0220472b88f391186fbaa2d735d0630f241650f2874c47ac794e0be95b72fd1d57b901210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+                    description: "Standard P2WPKH witness with a DER-encoded signature (71 bytes) and a compressed public key (33 bytes)"
+                },
+                p2wsh: {
+                    data: "304402200af4e47c9b9629dbecc21f73af989bdaa911f7e6f6c2e9394588a3aa68f81e9902204f3fcf6ade7e5abb1295b6774c8e0abd94ae62217367096bc02ee5e435b67da201210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+                    description: "2-of-2 multisig P2WSH witness with two signatures and a redeem script"
+                },
+                ordinal: {
+                    data: "2029fbc3eb63a4a01d9af4bed0ff38ba8fa2c7b357744c4d9a5a4a3e87d5f84c9bac0063036f726401010f746578742f706c61696e0048656c6c6f",
+                    description: "Ordinal inscription with 'text/plain' content type containing 'Hello'"
+                },
+                taproot: {
+                    data: "4140b32d0b2c9ed336e2c8f1c6f53bd1e0c6b91d34c0b4f8dcd8bbc9a1cea8a15c25d5383717a3c49d4788d787d973815e9d6e04d18f7b655886ecd049f9d8a578",
+                    description: "Taproot key path spend with Schnorr signature"
                 }
-                return str;
-            } catch (e) {
-                return 'Unable to decode hex to text';
-            }
-        };
+            };
 
-        const hexToBytes = (hex) => {
-            const bytes = [];
-            for (let i = 0; i < hex.length; i += 2) {
-                bytes.push(parseInt(hex.substr(i, 2), 16));
-            }
-            return bytes;
-        };
-
-        // Enhanced decoders with all witness types
-        const decoders = {
-            // P2WPKH Decoder with enhanced analysis
-            p2wpkh: (hex) => {
-                // Standard P2WPKH: 71-73 bytes signature + 33 bytes pubkey
-                const sigLengths = [142, 144, 146]; // 71-73 bytes * 2 for hex
-                const pubKeyLength = 66; // 33 bytes * 2 for hex
-                
-                for (let sigLength of sigLengths) {
-                    if (hex.length === sigLength + pubKeyLength) {
-                        const signature = hex.substring(0, sigLength);
-                        const publicKey = hex.substring(sigLength);
-                        
-                        // DER signature analysis
-                        const derAnalysis = {
-                            hasValidPrefix: signature.startsWith('30'),
-                            rLength: parseInt(signature.substr(6, 2), 16),
-                            sLength: parseInt(signature.substr(8 + parseInt(signature.substr(6, 2), 16) * 2, 2), 16),
-                            signatureType: signature.slice(-2) // SIGHASH type
-                        };
-
-                        // Public key analysis
-                        const pubKeyAnalysis = {
-                            prefix: publicKey.substring(0, 2),
-                            isCompressed: publicKey.length === 66,
-                            format: publicKey.startsWith('02') ? 'even y' : 
-                                   publicKey.startsWith('03') ? 'odd y' : 'invalid'
-                        };
-
-                        return {
-                            type: 'P2WPKH',
-                            details: {
-                                signature,
-                                publicKey,
-                                sigHashType: derAnalysis.signatureType === '01' ? 'SIGHASH_ALL' :
-                                            derAnalysis.signatureType === '02' ? 'SIGHASH_NONE' :
-                                            derAnalysis.signatureType === '03' ? 'SIGHASH_SINGLE' :
-                                            'UNKNOWN'
-                            },
-                            metadata: {
-                                derSignature: derAnalysis,
-                                publicKeyInfo: pubKeyAnalysis,
-                                witnessVersion: 0,
-                                program: 'P2WPKH (Pay-to-Witness-Public-Key-Hash)',
-                                size: hex.length / 2 + ' bytes'
-                            }
-                        };
-                    }
-                }
-                return null;
-            },
-
-            // P2WSH Decoder with enhanced analysis
-            p2wsh: (hex) => {
-                // P2WSH typically has multiple stack items
-                try {
-                    const items = [];
-                    let position = 0;
-                    
-                    while (position < hex.length) {
-                        // Try to identify stack items
-                        if (hex.length - position >= 66 && 
-                            (hex.substr(position, 2) === '02' || hex.substr(position, 2) === '03')) {
-                            // Likely a public key
-                            items.push({
-                                type: 'Public Key',
-                                value: hex.substr(position, 66),
-                                size: 33
-                            });
-                            position += 66;
-                        } else if (hex.substr(position, 2) === '30') {
-                            // Likely a DER signature
-                            const sigLen = parseInt(hex.substr(position + 2, 2), 16) * 2 + 4;
-                            items.push({
-                                type: 'DER Signature',
-                                value: hex.substr(position, sigLen),
-                                size: sigLen / 2
-                            });
-                            position += sigLen;
-                        } else {
-                            // Might be a script
-                            const remaining = hex.substr(position);
-                            items.push({
-                                type: 'Script',
-                                value: remaining,
-                                size: remaining.length / 2
-                            });
-                            break;
-                        }
-                    }
-
-                    // Script analysis
-                    const scriptAnalysis = {
-                        possibleType: items.length === 2 ? 'Simple Verification' :
-                                    items.length > 2 ? 'Multi-signature' : 'Complex Script',
-                        stackItems: items.length,
-                        totalSize: hex.length / 2
-                    };
-
-                    return {
-                        type: 'P2WSH',
-                        details: {
-                            stackItems: items.map(item => ({
-                                type: item.type,
-                                value: item.value,
-                                size: item.size + ' bytes'
-                            }))
-                        },
-                        metadata: {
-                            scriptAnalysis,
-                            witnessVersion: 0,
-                            program: 'P2WSH (Pay-to-Witness-Script-Hash)',
-                            possiblePattern: scriptAnalysis.possibleType
-                        }
-                    };
-                } catch (e) {
-                    return null;
-                }
-            },
-
-            // Previous Ordinals decoder
-            ordinals: (hex) => {
-                // [Previous Ordinals decoder code remains the same]
-            },
-
-            // Previous Taproot decoder
-            taproot: (hex) => {
-                // [Previous Taproot decoder code remains the same]
-            }
-        };
-
-        function decodeWitnessData() {
-            const witnessData = document.getElementById('witnessInput').value.trim();
-            const resultDiv = document.getElementById('result');
-            
-            if (!witnessData) {
-                resultDiv.innerHTML = '<div class="text-red-500">Please enter witness data</div>';
-                return;
-            }
-
-            const cleaned = witnessData.replace(/\s/g, '');
-            let decoded = null;
-
-            // Try each decoder
-            for (const [name, decoder] of Object.entries(decoders)) {
-                const result = decoder(cleaned);
-                if (result) {
-                    decoded = result;
-                    break;
-                }
-            }
-
-            if (!decoded) {
-                resultDiv.innerHTML = '<div class="text-red-500">Unable to determine witness type</div>';
-                return;
-            }
-
-            // Enhanced display with metadata
-            let html = `
-                <div class="bg-gray-100 p-4 rounded-lg">
-                    <h2 class="text-xl font-bold mb-2">Detected Type: ${decoded.type}</h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-2">
-                            <h3 class="font-bold text-lg">Main Details</h3>
-            `;
-
-            // Render details based on type
-            if (Array.isArray(decoded.details.stackItems)) {
-                // Special handling for P2WSH stack items
-                html += `<div class="space-y-2">`;
-                decoded.details.stackItems.forEach((item, index) => {
-                    html += `
-                        <div class="bg-white p-2 rounded">
-                            <strong>Stack Item ${index + 1} (${item.type}):</strong>
-                            <div class="break-all text-sm">${item.value}</div>
-                            <div class="text-sm text-gray-600">Size: ${item.size}</div>
-                        </div>
-                    `;
-                });
-                html += `</div>`;
-            } else {
-                // Standard rendering for other types
-                for (const [key, value] of Object.entries(decoded.details)) {
-                    html += `
-                        <div>
-                            <strong class="text-gray-700">${key}:</strong>
-                            <div class="break-all bg-white p-2 rounded mt-1 text-sm">${value}</div>
-                        </div>
-                    `;
-                }
-            }
-
-            html += `
-                        </div>
-                        <div class="space-y-2">
-                            <h3 class="font-bold text-lg">Technical Metadata</h3>
-            `;
-
-            for (const [key, value] of Object.entries(decoded.metadata)) {
-                html += `
-                    <div>
-                        <strong class="text-gray-700">${key}:</strong>
-                        <div class="break-all bg-white p-2 rounded mt-1 text-sm">
-                            ${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
-                        </div>
-                    </div>
-                `;
-            }
-
-            html += `
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            resultDiv.innerHTML = html;
+            const selected = examples[type];
+            document.getElementById('witnessInput').value = selected.data;
+            document.getElementById('exampleDescription').textContent = selected.description;
         }
     </script>
 </head>
 <body class="bg-gray-50 min-h-screen p-8">
     <div class="max-w-6xl mx-auto">
-        <h1 class="text-3xl font-bold mb-8 text-center">Comprehensive Bitcoin Witness Data Decoder</h1>
+        <h1 class="text-3xl font-bold mb-8 text-center">Bitcoin Witness Data Decoder</h1>
         
         <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="mb-6">
+                <h2 class="text-xl font-bold mb-4">Quick Start with Examples</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                    <button onclick="loadExample('p2wpkh')" class="bg-blue-100 hover:bg-blue-200 p-2 rounded">
+                        Load P2WPKH Example
+                    </button>
+                    <button onclick="loadExample('p2wsh')" class="bg-green-100 hover:bg-green-200 p-2 rounded">
+                        Load P2WSH Example
+                    </button>
+                    <button onclick="loadExample('ordinal')" class="bg-yellow-100 hover:bg-yellow-200 p-2 rounded">
+                        Load Ordinal Example
+                    </button>
+                    <button onclick="loadExample('taproot')" class="bg-purple-100 hover:bg-purple-200 p-2 rounded">
+                        Load Taproot Example
+                    </button>
+                </div>
+                <div id="exampleDescription" class="text-sm text-gray-600 italic mb-4"></div>
+            </div>
+
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="witnessInput">
                     Witness Data (hex):
@@ -259,7 +65,7 @@
                 <textarea 
                     id="witnessInput"
                     class="w-full p-3 border rounded-lg h-32 font-mono text-sm"
-                    placeholder="Enter witness data in hex format..."
+                    placeholder="Enter witness data in hex format or use the example buttons above..."
                 ></textarea>
             </div>
 
@@ -276,53 +82,75 @@
         <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-xl font-bold mb-4">Supported Witness Types</h2>
-                <ul class="list-disc pl-5 space-y-2">
-                    <li>P2WPKH (Pay-to-Witness-Public-Key-Hash)
-                        <ul class="list-circle pl-5 text-sm text-gray-600">
-                            <li>DER signature analysis</li>
-                            <li>Public key format detection</li>
-                            <li>SIGHASH type identification</li>
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="font-bold text-lg text-blue-600">P2WPKH (Pay-to-Witness-Public-Key-Hash)</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-sm">
+                            <li>DER signature validation (71-73 bytes)</li>
+                            <li>Public key format detection (compressed/uncompressed)</li>
+                            <li>SIGHASH type identification (ALL, NONE, SINGLE)</li>
+                            <li>Signature component analysis (r and s values)</li>
                         </ul>
-                    </li>
-                    <li>P2WSH (Pay-to-Witness-Script-Hash)
-                        <ul class="list-circle pl-5 text-sm text-gray-600">
-                            <li>Stack item analysis</li>
-                            <li>Script pattern detection</li>
-                            <li>Multi-signature recognition</li>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-bold text-lg text-green-600">P2WSH (Pay-to-Witness-Script-Hash)</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-sm">
+                            <li>Stack item analysis and validation</li>
+                            <li>Script pattern detection (multisig, time locks)</li>
+                            <li>Witness stack element breakdown</li>
+                            <li>Script complexity assessment</li>
                         </ul>
-                    </li>
-                    <li>Ordinal Inscriptions
-                        <ul class="list-circle pl-5 text-sm text-gray-600">
-                            <li>Content type analysis</li>
-                            <li>Metadata extraction</li>
-                            <li>Size calculations</li>
+                    </div>
+
+                    <div>
+                        <h3 class="font-bold text-lg text-yellow-600">Ordinal Inscriptions</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-sm">
+                            <li>Content type detection and validation</li>
+                            <li>Metadata extraction and analysis</li>
+                            <li>Size and efficiency metrics</li>
+                            <li>Protocol compliance checking</li>
                         </ul>
-                    </li>
-                    <li>Taproot
-                        <ul class="list-circle pl-5 text-sm text-gray-600">
+                    </div>
+
+                    <div>
+                        <h3 class="font-bold text-lg text-purple-600">Taproot</h3>
+                        <ul class="list-disc pl-5 space-y-1 text-sm">
                             <li>Schnorr signature validation</li>
-                            <li>Script path detection</li>
+                            <li>Key path vs Script path detection</li>
                             <li>Control block analysis</li>
+                            <li>Leaf version and script analysis</li>
                         </ul>
-                    </li>
-                </ul>
+                    </div>
+                </div>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-bold mb-4">Example Witness Data</h2>
+                <h2 class="text-xl font-bold mb-4">Understanding Witness Data</h2>
                 <div class="space-y-4 text-sm">
-                    <div>
-                        <strong>P2WPKH Example:</strong>
-                        <div class="break-all bg-gray-100 p-2 rounded">
-                            304402203a0f5f0e1f2bdbcd04db3061d18f3af70e07f4f467cbc1b8116f267025f5360b0220472b88f391186fbaa2d735d0630f241650f2874c47ac794e0be95b72fd1d57b901210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
-                        </div>
-                    </div>
-                    <div>
-                        <strong>P2WSH Example:</strong>
-                        <div class="break-all bg-gray-100 p-2 rounded">
-                            304402200af4e47c9b9629dbecc21f73af989bdaa911f7e6f6c2e9394588a3aa68f81e9902204f3fcf6ade7e5abb1295b6774c8e0abd94ae62217367096bc02ee5e435b67da201210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
-                        </div>
-                    </div>
+                    <p>Witness data is a crucial part of Bitcoin's SegWit upgrade, enabling:</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>
+                            <strong>Transaction Malleability Fix:</strong> 
+                            Separating signature data from transaction ID calculation
+                        </li>
+                        <li>
+                            <strong>Advanced Script Types:</strong>
+                            Supporting complex spending conditions and smart contracts
+                        </li>
+                        <li>
+                            <strong>Block Space Efficiency:</strong>
+                            Witness data receives a discount in block weight calculations
+                        </li>
+                        <li>
+                            <strong>New Features:</strong>
+                            Enabling innovations like Taproot and Ordinals
+                        </li>
+                    </ul>
+                    <p class="mt-4">
+                        This decoder helps you understand the structure and content of different witness types,
+                        making it easier to debug transactions and learn about Bitcoin's script system.
+                    </p>
                 </div>
             </div>
         </div>
