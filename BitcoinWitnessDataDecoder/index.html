@@ -12,26 +12,78 @@
             const examples = {
                 p2wpkh: {
                     data: "304402203a0f5f0e1f2bdbcd04db3061d18f3af70e07f4f467cbc1b8116f267025f5360b0220472b88f391186fbaa2d735d0630f241650f2874c47ac794e0be95b72fd1d57b901210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-                    description: "Standard P2WPKH witness with a DER-encoded signature (71 bytes) and a compressed public key (33 bytes)"
+                    description: "Standard P2WPKH witness with a DER-encoded signature (71 bytes) and a compressed public key (33 bytes)",
+                    txReference: {
+                        note: "To find similar transactions:",
+                        steps: [
+                            "Visit mempool.space",
+                            "Look for transactions with 1 input and witness size ~108 bytes",
+                            "Check for native SegWit addresses (bc1q...)"
+                        ],
+                        explorerUrl: "https://mempool.space"
+                    }
                 },
                 p2wsh: {
                     data: "304402200af4e47c9b9629dbecc21f73af989bdaa911f7e6f6c2e9394588a3aa68f81e9902204f3fcf6ade7e5abb1295b6774c8e0abd94ae62217367096bc02ee5e435b67da201210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-                    description: "2-of-2 multisig P2WSH witness with two signatures and a redeem script"
+                    description: "2-of-2 multisig P2WSH witness with two signatures and a redeem script",
+                    txReference: {
+                        note: "To find similar transactions:",
+                        steps: [
+                            "Visit mempool.space",
+                            "Look for transactions with witness size >200 bytes",
+                            "Check for P2WSH addresses (bc1q...)"
+                        ],
+                        explorerUrl: "https://mempool.space"
+                    }
                 },
                 ordinal: {
                     data: "2029fbc3eb63a4a01d9af4bed0ff38ba8fa2c7b357744c4d9a5a4a3e87d5f84c9bac0063036f726401010f746578742f706c61696e0048656c6c6f",
-                    description: "Ordinal inscription with 'text/plain' content type containing 'Hello'"
+                    description: "Ordinal inscription with 'text/plain' content type containing 'Hello'",
+                    txReference: {
+                        note: "To find real ordinal inscriptions:",
+                        steps: [
+                            "Visit ordinals.com/inscriptions",
+                            "Look for recent text inscriptions",
+                            "Check witness data in the inscription transaction"
+                        ],
+                        explorerUrl: "https://ordinals.com"
+                    }
                 },
                 taproot: {
                     data: "4140b32d0b2c9ed336e2c8f1c6f53bd1e0c6b91d34c0b4f8dcd8bbc9a1cea8a15c25d5383717a3c49d4788d787d973815e9d6e04d18f7b655886ecd049f9d8a578",
-                    description: "Taproot key path spend with Schnorr signature"
+                    description: "Taproot key path spend with Schnorr signature",
+                    txReference: {
+                        note: "To find Taproot transactions:",
+                        steps: [
+                            "Visit mempool.space",
+                            "Look for transactions with Taproot inputs (bc1p...)",
+                            "Check for 64-byte Schnorr signatures in witness"
+                        ],
+                        explorerUrl: "https://mempool.space"
+                    }
                 }
             };
 
             const selected = examples[type];
             document.getElementById('witnessInput').value = selected.data;
-            document.getElementById('exampleDescription').textContent = selected.description;
+            document.getElementById('exampleDescription').innerHTML = `
+                <div class="space-y-2">
+                    <p>${selected.description}</p>
+                    <div class="bg-gray-50 p-3 rounded">
+                        <p class="font-semibold">${selected.txReference.note}</p>
+                        <ol class="list-decimal pl-5 mt-1">
+                            ${selected.txReference.steps.map(step => `<li>${step}</li>`).join('')}
+                        </ol>
+                        <a href="${selected.txReference.explorerUrl}" 
+                           target="_blank" 
+                           class="text-blue-500 hover:text-blue-700 mt-2 inline-block">
+                            🔍 Explore Similar Transactions
+                        </a>
+                    </div>
+                </div>
+            `;
         }
+
     </script>
 </head>
 <body class="bg-gray-50 min-h-screen p-8">
