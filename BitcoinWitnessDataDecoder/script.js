@@ -1,6 +1,9 @@
 // Utility functions
 function isValidHex(str) {
-    return /^[0-9a-fA-F]*$/.test(str);
+    // Remove any whitespace and common separators
+    const cleaned = str.replace(/[\s\n\r]/g, '');
+    // Check if it's valid hex after cleaning
+    return /^[0-9a-fA-F]*$/.test(cleaned);
 }
 
 function hexToBytes(hex) {
@@ -138,37 +141,51 @@ const decoders = {
         return null;
     },
 
-    ordinal: function(hex) {
-        if (hex.startsWith('0063036f7264')) {
-            const matches = {
-                protocol: hex.slice(6, 12),
-                version: hex.slice(12, 14),
-                contentType: '',
-                content: ''
-            };
+     ordinal: function(hex) {
+        // Clean the input first
+        hex = hex.replace(/[\s\n\r]/g, '');
+        
+        // Check for the ord marker (0063036f7264)
+        if (hex.includes('0063036f7264')) {
+            try {
+                // Find the start of the ord protocol marker
+                const ordStart = hex.indexOf('0063036f7264');
+                // Extract the relevant portion
+                const relevantHex = hex.slice(ordStart);
+                
+                // Parse components
+                let pos = 12; // Skip the ord marker
+                const version = relevantHex.slice(pos, pos + 2);
+                pos += 2;
+                
+                // Get content type length and content
+                const contentTypeLength = parseInt(relevantHex.slice(pos, pos + 2), 16);
+                pos += 2;
+                
+                const contentType = hexToAscii(relevantHex.slice(pos, pos + contentTypeLength * 2));
+                pos += contentTypeLength * 2;
+                
+                // Get content (remaining data)
+                const content = hexToAscii(relevantHex.slice(pos + 2)); // +2 to skip size byte
 
-            let pos = 14;
-            const contentTypeLength = parseInt(hex.slice(pos, pos + 2), 16);
-            pos += 2;
-            
-            matches.contentType = hexToAscii(hex.slice(pos, pos + contentTypeLength * 2));
-            pos += contentTypeLength * 2;
-            
-            matches.content = hexToAscii(hex.slice(pos + 2)); // +2 to skip delimiter
-
-            return {
-                type: 'Ordinal Inscription',
-                details: {
-                    contentType: matches.contentType,
-                    content: matches.content,
-                    protocol: hexToAscii(matches.protocol)
-                },
-                metadata: {
-                    version: parseInt(matches.version, 16),
-                    totalSize: `${hex.length / 2} bytes`,
-                    format: 'Taproot Script Path'
-                }
-            };
+                return {
+                    type: 'Ordinal Inscription',
+                    details: {
+                        contentType: contentType,
+                        content: content.length > 100 ? content.substring(0, 100) + '...' : content,
+                        protocol: 'ord'
+                    },
+                    metadata: {
+                        version: parseInt(version, 16),
+                        totalSize: `${hex.length / 2} bytes`,
+                        format: 'Taproot Script Path',
+                        fullHex: hex
+                    }
+                };
+            } catch (e) {
+                console.error('Error parsing ordinal:', e);
+                return null;
+            }
         }
         return null;
     },
