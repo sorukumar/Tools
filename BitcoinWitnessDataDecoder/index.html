@@ -6,7 +6,87 @@
     <title>Bitcoin Witness Data Decoder</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script>
-        // [Previous utility functions and decoders remain the same]
+               // Utility functions
+            }
+
+            const cleaned = witnessData.replace(/\s/g, '');
+            let decoded = null;
+
+            // Try each decoder
+            for (const [name, decoder] of Object.entries(decoders)) {
+                const result = decoder(cleaned);
+                if (result) {
+                    decoded = result;
+                    break;
+                }
+            }
+
+            if (!decoded) {
+                resultDiv.innerHTML = '<div class="text-red-500">Unable to determine witness type</div>';
+                return;
+            }
+
+            // Enhanced display with metadata
+            let html = `
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h2 class="text-xl font-bold mb-2">Detected Type: ${decoded.type}</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <h3 class="font-bold text-lg">Main Details</h3>
+            `;
+
+            // Render details based on type
+            if (Array.isArray(decoded.details.stackItems)) {
+                // Special handling for P2WSH stack items
+                html += `<div class="space-y-2">`;
+                decoded.details.stackItems.forEach((item, index) => {
+                    html += `
+                        <div class="bg-white p-2 rounded">
+                            <strong>Stack Item ${index + 1} (${item.type}):</strong>
+                            <div class="break-all text-sm">${item.value}</div>
+                            <div class="text-sm text-gray-600">Size: ${item.size}</div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            } else {
+                // Standard rendering for other types
+                for (const [key, value] of Object.entries(decoded.details)) {
+                    html += `
+                        <div>
+                            <strong class="text-gray-700">${key}:</strong>
+                            <div class="break-all bg-white p-2 rounded mt-1 text-sm">${value}</div>
+                        </div>
+                    `;
+                }
+            }
+
+            html += `
+                        </div>
+                        <div class="space-y-2">
+                            <h3 class="font-bold text-lg">Technical Metadata</h3>
+            `;
+
+            for (const [key, value] of Object.entries(decoded.metadata)) {
+                html += `
+                    <div>
+                        <strong class="text-gray-700">${key}:</strong>
+                        <div class="break-all bg-white p-2 rounded mt-1 text-sm">
+                            ${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            resultDiv.innerHTML = html;
+        }
 
         function loadExample(type) {
             const examples = {
