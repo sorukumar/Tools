@@ -3,89 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Lightning Network Animation</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Lightning Network Visualization</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f3f4f6;
+            color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #34495e;
+            margin: 20px 0;
+            font-size: 2rem;
+        }
+
+        .select-container {
+            margin: 20px;
+            background: #ecf0f1;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+
+        label {
+            font-size: 1rem;
+            margin-right: 5px;
+        }
+
+        input, select, button {
+            margin: 5px;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 1rem;
+            outline: none;
+            background: white;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        svg {
+            width: 80%;
+            height: 600px;
+            margin: 20px 0;
+            background: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .node {
+            stroke: #ffffff;
+            stroke-width: 2px;
+            cursor: pointer;
+        }
+
+        .node:hover {
+            stroke: #34495e;
+            stroke-width: 3px;
+        }
+
+        .link {
+            stroke: #7f8c8d;
+            stroke-opacity: 0.7;
+        }
+
+        .highlight-node {
+            fill: #e74c3c;
+        }
+
+        .highlight-link {
+            stroke: #e67e22;
+            stroke-width: 3px;
+        }
+
+        .label {
+            font-size: 12px;
+            fill: #34495e;
+            font-weight: bold;
+        }
+
+        #transaction-history {
+            margin: 20px auto;
+            text-align: center;
+            width: 80%;
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #transaction-history h2 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        #transaction-history p {
+            font-size: 1rem;
+            color: #7f8c8d;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Lightning Network Simulator</h1>
-        <p>This interactive simulator helps you understand how payments are routed through a Lightning Network. Experiment with different network configurations and see how payments find their way from sender to receiver!</p>
-    </header>
+    <h1>Lightning Network Visualization</h1>
+    <div class="select-container">
+        <label for="nodeCount">Number of Nodes:</label>
+        <input id="nodeCount" type="number" value="5" min="3" max="20">
+        <button onclick="initializeNetwork()">Initialize Network</button>
+    </div>
+    <div class="select-container">
+        <label for="sourceNode">Source Node:</label>
+        <select id="sourceNode"></select>
+        <label for="targetNode">Target Node:</label>
+        <select id="targetNode"></select>
+        <label for="satsAmount">Amount (sats):</label>
+        <input id="satsAmount" type="number" value="10" min="1">
+        <button onclick="startPaymentRouting()">Start Payment Routing</button>
+    </div>
+    <svg id="network"></svg>
 
-    <div class="instructions">
-        <h3>How to use:</h3>
-        <ol>
-            <li>Choose the number of nodes and channel probability, then click "Regenerate Network".</li>
-            <li>Select a sender node, receiver node, and payment amount.</li>
-            <li>Click "Send Payment" to see the payment route through the network.</li>
-        </ol>
+    <div id="transaction-history">
+        <h2>Transaction History</h2>
+        <p>No Transactions</p>
     </div>
 
-    <div class="main-container">
-        <div class="controls">
-            <div class="control-group top-controls">
-                <label for="nodeCount">Number of Nodes:</label>
-                <select id="nodeCount">
-                    <option value="7">7</option>
-                    <option value="9">9</option>
-                    <option value="13">13</option>
-                    <option value="17">17</option>
-                    <option value="21">21</option>
-                </select>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script> let nodes = [];
+        let links = [];
+        let path = [];
+        let simulation;
+        let transactionHistory = [];
 
-                <label for="channelProbability">Channel Probability:</label>
-                <select id="channelProbability">
-                    <option value="0.3">30%</option>
-                    <option value="0.4">40%</option>
-                    <option value="0.5">50%</option>
-                </select>
+        // Initialize the network
+        function initializeNetwork() {
+            const nodeCount = parseInt(document.getElementById("nodeCount").value, 10);
+            createConnectedNetwork(nodeCount);
+            populateNodeSelectors();
+            drawNetwork();
+            updateTransactionHistory();
+        }
 
-                <button id="regenerate">Regenerate Network</button>
-            </div>
+        // Create a connected network with weights
+        function createConnectedNetwork(nodeCount) {
+            nodes = Array.from({ length: nodeCount }, (_, i) => ({
+                id: i,
+                sats: Math.floor(Math.random() * 100) + 50 // Random capacity for each node
+            }));
 
-            <div class="control-group sidebar-controls">
-                <label for="senderNode">Sender Node:</label>
-                <select id="senderNode"></select>
+            links = [];
 
-                <label for="receiverNode">Receiver Node:</label>
-                <select id="receiverNode"></select>
+            // Create a spanning tree to ensure all nodes are connected
+            for (let i = 1; i < nodeCount; i++) {
+                const parent = Math.floor(Math.random() * i);
+                const sats = Math.floor(Math.random() * 50) + 10; // Random weight
+                links.push({ source: parent, target: i, sats });
+            }
 
-                <label for="paymentAmount">Payment Amount:</label>
-                <select id="paymentAmount">
-                    <option value="1000000">1m sats</option>
-                    <option value="5000000">5m sats</option>
-                    <option value="10000000">10m sats</option>
-                    <option value="50000000">50m sats</option>
-                    <option value="100000000">100m sats</option>
-                    <option value="200000000">200m sats</option>
-                </select>
+            // Add random extra links
+            for (let i = 0; i < nodeCount; i++) {
+                const u = Math.floor(Math.random() * nodeCount);
+                const v = Math.floor(Math.random() * nodeCount);
+                if (
+                    u !== v &&
+                    !links.some(link => (link.source === u && link.target === v) || (link.source === v && link.target === u))
+                ) {
+                    const sats = Math.floor(Math.random() * 50) + 10;
+                    links.push({ source: u, target: v, sats });
+                }
+            }
+        }
 
-                <button id="sendPayment">Send Payment</button>
-            </div>
-        </div>
-        <div class="network" id="network"></div>
-        <div class="tooltip" id="tooltip"></div>
-    </div>
-    <div class="transaction-table-container">
-        <h3>Transaction History</h3>
-        <table id="transactionTable">
-            <thead>
-                <tr>
-                    <th>Attempt</th>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Fees</th>
-                    <th>Path</th>
-                    <th>Updated Balances</th>
-                </tr>
-            </thead>
-            <tbody id="transactionTableBody">
-                
-            </tbody>
-        </table>
-    </div>
-    <script src="script.js"></script>
+        // Populate dropdowns
+        function populateNodeSelectors() {
+            const sourceSelect = document.getElementById("sourceNode");
+            const targetSelect = document.getElementById("targetNode");
+
+            sourceSelect.innerHTML = "";
+            targetSelect.innerHTML = "";
+
+            nodes.forEach(node => {
+                const option = document.createElement("option");
+                option.value = node.id;
+                option.text = `Node ${node.id} `;
+                sourceSelect.appendChild(option);
+
+                const optionCopy = option.cloneNode(true);
+                targetSelect.appendChild(optionCopy);
+            });
+        }
+
+        // Find the best path using Dijkstra's algorithm
+        function findBestPath(source, target, amount) {
+            const distances = {};
+            const previous = {};
+            const visited = new Set();
+            const queue = [];
+
+            nodes.forEach(node => {
+                distances[node.id] = Infinity;
+                previous[node.id] = null;
+            });
+            distances[source] = 0;
+            queue.push(source);
+
+            while (queue.length > 0) {
+                const current = queue.sort((a, b) => distances[a] - distances[b]).shift();
+                if (current === target) break;
+                visited.add(current);
+
+                links
+                    .filter(link =>
+                        (link.source.id === current || link.target.id === current) &&
+                        link.sats >= amount // Check if the link can handle the amount
+                    )
+                    .forEach(link => {
+                        const neighbor = link.source.id === current ? link.target.id : link.source.id;
+                        if (visited.has(neighbor)) return;
+
+                        const newDist = distances[current] + link.sats;
+                        if (newDist < distances[neighbor]) {
+                            distances[neighbor] = newDist;
+                            previous[neighbor] = current;
+                            queue.push(neighbor);
+                        }
+                    });
+            }
+
+            const path = [];
+            let step = target;
+            while (step !== null) {
+                path.unshift(step);
+                step = previous[step];
+            }
+            return path;
+        }
+
+        // Draw the network
+        function drawNetwork() {
+            const svg = d3.select("#network");
+            const width = svg.node().clientWidth;
+            const height = svg.node().clientHeight;
+
+            simulation = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(links).id(d => d.id).distance(150))
+                .force("charge", d3.forceManyBody().strength(-300))
+                .force("center", d3.forceCenter(width / 2, height / 2))
+                .on("tick", ticked);
+
+            svg.selectAll("*").remove();
+
+            const link = svg.append("g")
+                .selectAll(".link")
+                .data(links)
+                .enter().append("line")
+                .attr("class", "link")
+                .attr("stroke-width", d => d.sats / 10);
+
+            const node = svg.append("g")
+                .selectAll(".node")
+                .data(nodes)
+                .enter().append("circle")
+                .attr("class", "node")
+                .attr("r", 20)
+                .attr("fill", "#69b3a2")
+                .call(d3.drag()
+                    .on("start", dragStarted)
+                    .on("drag", dragged)
+                    .on("end", dragEnded));
+
+            const label = svg.append("g")
+                .selectAll(".label")
+                .data(nodes)
+                .enter().append("text")
+                .attr("class", "label")
+                .attr("x", 6)
+                .attr("y", 3)
+                .text(d => `Node ${d.id}`);
+
+            function ticked() {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                node
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y);
+
+                label
+                    .attr("x", d => d.x)
+                    .attr("y", d => d.y);
+            }
+        }
+
+        // Drag handlers
+        function dragStarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragEnded(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        // Highlight the path
+        function highlightPath() {
+            const svg = d3.select("#network");
+            const link = svg.selectAll(".link");
+            const node = svg.selectAll(".node");
+
+            link.classed("highlight-link", d =>
+                path.some((_, i) => 
+                    (path[i] === d.source.id && path[i + 1] === d.target.id) ||
+                    (path[i] === d.target.id && path[i + 1] === d.source.id)
+                )
+            );
+
+            node.classed("highlight-node", d => path.includes(d.id));
+        }
+
+        // Start payment routing
+        function startPaymentRouting() {
+            const source = parseInt(document.getElementById("sourceNode").value);
+            const target = parseInt(document.getElementById("targetNode").value);
+            const amount = parseInt(document.getElementById("satsAmount").value);
+
+            path = findBestPath(source, target, amount);
+
+            if (path.length > 1) {
+                transactionHistory.push(`Payment from Node ${source} to Node ${target}: ${amount} sats`);
+                updateTransactionHistory();
+                highlightPath();
+            } else {
+                alert("No valid path found!");
+            }
+        }
+
+        // Update transaction history
+        function updateTransactionHistory() {
+            const historyContainer = document.getElementById("transaction-history");
+            const historyText = transactionHistory.length > 0 ?
+                transactionHistory.join("<br>") : "No Transactions";
+
+            historyContainer.innerHTML = `<h2>Transaction History</h2><p>${historyText}</p>`;
+        }
+        // Existing JavaScript code remains unchanged
+    </script>
 </body>
 </html>
