@@ -14,4 +14,4 @@ This tool decodes short channel IDs from the Lightning Network, extracting the b
 This tool decodes bitoin witness data. Paste witness data and find out the details.
 
 ### [Bitcoin Network Stats - Basic](BitcoinBasicStats/index.html)
-This tool decodes bitoin witness data. Paste witness data and find out the details.
+Bitcoin network metrics - TPS, BTC sent per block, BTC sent per Day.
