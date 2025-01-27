@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Bitcoin Metrics Calculations</title>
+    <style>
+        .error { color: red; }
+        .debug { 
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bitcoin Metrics Test</h1>
+    <div id="debug"></div>
+    <div id="results"></div>
+
+    <script>
+        class MetricsTest {
+            constructor() {
+                this.API_BASE = 'https://mempool.space/api';
+                this.TEST_BLOCKS = 3; // Reduced to 3 blocks
+                this.debug = document.getElementById('debug');
+                this.results = document.getElementById('results');
+            }
+
+            log(message, data = null) {
+                console.log(message, data);
+                this.debug.innerHTML += `
+                    <div class="debug">
+                        ${message}
+                        ${data ? '<pre>' + JSON.stringify(data, null, 2) + '</pre>' : ''}
+                    </div>`;
+            }
+
+            async fetchData(url) {
+                this.log(`Fetching: ${url}`);
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const contentType = response.headers.get('content-type');
+                    const data = contentType && contentType.includes('application/json') 
+                        ? await response.json()
+                        : await response.text();
+                    this.log(`Success:`, data);
+                    return data;
+                } catch (error) {
+                    this.log(`Error fetching ${url}: ${error.message}`);
+                    throw error;
+                }
+            }
+
+            async calculateTransactionVolume(tx) {
+                try {
+                    // Log the transaction we're processing
+                    this.log('Processing transaction:', tx.txid);
+
+                    const inputAddresses = new Set();
+                    for (const input of tx.vin) {
+                        if (input.prevout) {
+                            inputAddresses.add(input.prevout.scriptpubkey_address);
+                        }
+                    }
+
+                    let actualVolume = 0;
+                    for (const output of tx.vout) {
+                        if (output.scriptpubkey_address && !inputAddresses.has(output.scriptpubkey_address)) {
+                            actualVolume += output.value;
+                        }
+                    }
+
+                    this.log(`Transaction ${tx.txid} volume: ${actualVolume}`);
+                    return actualVolume;
+                } catch (error) {
+                    this.log(`Error calculating volume for tx: ${error.message}`);
+                    return 0;
+                }
+            }
+
+            async fetchBlockData(hash) {
+                try {
+                    const blockInfo = await this.fetchData(`${this.API_BASE}/block/${hash}`);
+                    this.log('Block info retrieved:', blockInfo);
+
+                    // Get first transaction only for testing
+                    const txids = await this.fetchData(`${this.API_BASE}/block/${hash}/txids`);
+                    this.log(`Retrieved ${txids.length} transaction IDs`);
+
+                    // Process only first 5 transactions for testing
+                    let totalVolume = 0;
+                    for (let i = 0; i < Math.min(5, txids.length); i++) {
+                        const tx = await this.fetchData(`${this.API_BASE}/tx/${txids[i]}`);
+                        const txVolume = await this.calculateTransactionVolume(tx);
+                        totalVolume += txVolume;
+                    }
+
+                    return {
+                        ...blockInfo,
+                        totalVolume: totalVolume,
+                        btcPerSecond: totalVolume / 600
+                    };
+                } catch (error) {
+                    this.log(`Error processing block ${hash}: ${error.message}`);
+                    throw error;
+                }
+            }
+
+            async initialize() {
+                try {
+                    this.log('Starting test...');
+                    
+                    const latestHeight = await this.fetchData(`${this.API_BASE}/blocks/tip/height`);
+                    this.log('Latest block height:', latestHeight);
+
+                    const startHeight = latestHeight - this.TEST_BLOCKS + 1;
+                    this.log(`Will process blocks from ${startHeight} to ${latestHeight}`);
+
+                    for (let height = startHeight; height <= latestHeight; height++) {
+                        this.log(`Processing block ${height}...`);
+                        const hash = await this.fetchData(`${this.API_BASE}/block-height/${height}`);
+                        const blockData = await this.fetchBlockData(hash);
+                        this.log('Block data processed:', blockData);
+                    }
+
+                } catch (error) {
+                    this.log(`Test failed: ${error.message}`);
+                    this.results.innerHTML += `<div class="error">Error: ${error.message}</div>`;
+                }
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const test = new MetricsTest();
+            test.initialize();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bitcoin Network Metrics</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .section {
+            margin: 30px 0;
+        }
+        .section-title {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .metric-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .metric-label {
+            font-weight: bold;
+            color: #666;
+        }
+        .metric-value {
+            font-size: 1.2em;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bitcoin Network Metrics</h1>
+
+        <div class="section">
+            <h2 class="section-title">Raw Block Data</h2>
+            <table id="rawData">
+                <thead>
+                    <tr>
+                        <th>Height</th>
+                        <th>Timestamp</th>
+                        <th>Transactions</th>
+                        <th>Size (MB)</th>
+                        <th>Volume (BTC)</th>
+                        <th>BTC/Second</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Hourly Metrics</h2>
+            <table id="hourlyMetrics">
+                <thead>
+                    <tr>
+                        <th>Hour</th>
+                        <th>Blocks</th>
+                        <th>Transactions</th>
+                        <th>Avg TPS</th>
+                        <th>Total Size (MB)</th>
+                        <th>Volume (BTC)</th>
+                        <th>BTC/Second</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Summary Metrics</h2>
+            <div id="summaryMetrics"></div>
+        </div>
+    </div>
+
+    <script>
+        class BitcoinMetrics {
+            constructor() {
+                this.API_BASE = 'https://mempool.space/api';
+                this.TEST_BLOCKS = 20; // Increased to 20 blocks
+                this.blocks = [];
+            }
+
+            satoshiToBTC(satoshi) {
+                return (satoshi / 100000000).toFixed(8);
+            }
+
+            formatNumber(num) {
+                return new Intl.NumberFormat().format(num);
+            }
+
+            async fetchData(url) {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.headers.get('content-type')?.includes('application/json')
+                    ? await response.json()
+                    : await response.text();
+            }
+
+            async calculateTransactionVolume(tx) {
+                const inputAddresses = new Set();
+                for (const input of tx.vin) {
+                    if (input.prevout) {
+                        inputAddresses.add(input.prevout.scriptpubkey_address);
+                    }
+                }
+
+                let actualVolume = 0;
+                for (const output of tx.vout) {
+                    if (output.scriptpubkey_address && !inputAddresses.has(output.scriptpubkey_address)) {
+                        actualVolume += output.value;
+                    }
+                }
+                return actualVolume;
+            }
+
+            async processBlock(hash) {
+                const blockInfo = await this.fetchData(`${this.API_BASE}/block/${hash}`);
+                const txids = await this.fetchData(`${this.API_BASE}/block/${hash}/txids`);
+
+                let totalVolume = 0;
+                // Process first 10 transactions for performance
+                const txsToProcess = txids.slice(0, 10);
+                for (const txid of txsToProcess) {
+                    const tx = await this.fetchData(`${this.API_BASE}/tx/${txid}`);
+                    const txVolume = await this.calculateTransactionVolume(tx);
+                    totalVolume += txVolume;
+                }
+
+                return {
+                    height: blockInfo.height,
+                    timestamp: blockInfo.timestamp,
+                    tx_count: blockInfo.tx_count,
+                    size: blockInfo.size,
+                    totalVolume: totalVolume,
+                    btcPerSecond: totalVolume / 600
+                };
+            }
+
+            updateRawData() {
+                const tbody = document.querySelector('#rawData tbody');
+                tbody.innerHTML = this.blocks.map(block => `
+                    <tr>
+                        <td>${block.height}</td>
+                        <td>${new Date(block.timestamp * 1000).toLocaleString()}</td>
+                        <td>${this.formatNumber(block.tx_count)}</td>
+                        <td>${(block.size / 1024 / 1024).toFixed(2)}</td>
+                        <td>${this.satoshiToBTC(block.totalVolume)}</td>
+                        <td>${this.satoshiToBTC(block.btcPerSecond)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            updateHourlyMetrics() {
+                const hourlyData = {};
+
+                this.blocks.forEach(block => {
+                    const date = new Date(block.timestamp * 1000);
+                    const hourKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:00`;
+
+                    if (!hourlyData[hourKey]) {
+                        hourlyData[hourKey] = {
+                            blocks: 0,
+                            transactions: 0,
+                            size: 0,
+                            totalVolume: 0,
+                            avgTps: 0,
+                            btcPerSecond: 0
+                        };
+                    }
+
+                    hourlyData[hourKey].blocks++;
+                    hourlyData[hourKey].transactions += block.tx_count;
+                    hourlyData[hourKey].size += block.size;
+                    hourlyData[hourKey].totalVolume += block.totalVolume;
+                    hourlyData[hourKey].avgTps = (
+                        hourlyData[hourKey].transactions /
+                        (hourlyData[hourKey].blocks * 600)
+                    ).toFixed(2);
+                    hourlyData[hourKey].btcPerSecond = hourlyData[hourKey].totalVolume / (hourlyData[hourKey].blocks * 600);
+                });
+
+                const tbody = document.querySelector('#hourlyMetrics tbody');
+                tbody.innerHTML = Object.entries(hourlyData).map(([hour, data]) => `
+                    <tr>
+                        <td>${hour}</td>
+                        <td>${data.blocks}</td>
+                        <td>${this.formatNumber(data.transactions)}</td>
+                        <td>${data.avgTps}</td>
+                        <td>${(data.size / 1024 / 1024).toFixed(2)}</td>
+                        <td>${this.satoshiToBTC(data.totalVolume)}</td>
+                        <td>${this.satoshiToBTC(data.btcPerSecond)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            updateSummaryMetrics() {
+                const summary = {
+                    totalBlocks: this.blocks.length,
+                    totalTransactions: this.blocks.reduce((sum, block) => sum + block.tx_count, 0),
+                    totalSize: this.blocks.reduce((sum, block) => sum + block.size, 0),
+                    totalVolume: this.blocks.reduce((sum, block) => sum + block.totalVolume, 0),
+                    avgBtcPerSecond: this.blocks.reduce((sum, block) => sum + block.btcPerSecond, 0) / this.blocks.length,
+                    timeSpan: (
+                        this.blocks[0].timestamp -
+                        this.blocks[this.blocks.length - 1].timestamp
+                    ) / 3600
+                };
+
+                document.getElementById('summaryMetrics').innerHTML = `
+                    <div class="metric-card">
+                        <div class="metric-label">Total Blocks</div>
+                        <div class="metric-value">${summary.totalBlocks}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Total Transactions</div>
+                        <div class="metric-value">${this.formatNumber(summary.totalTransactions)}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Average TPS</div>
+                        <div class="metric-value">${(summary.totalTransactions / (summary.totalBlocks * 600)).toFixed(2)}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Total Size</div>
+                        <div class="metric-value">${(summary.totalSize / 1024 / 1024).toFixed(2)} MB</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Total Volume</div>
+                        <div class="metric-value">${this.satoshiToBTC(summary.totalVolume)} BTC</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Average BTC/Second</div>
+                        <div class="metric-value">${this.satoshiToBTC(summary.avgBtcPerSecond)} BTC</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Time Span</div>
+                        <div class="metric-value">${summary.timeSpan.toFixed(2)} hours</div>
+                    </div>
+                `;
+            }
+
+            async initialize() {
+                try {
+                    const latestHeight = await this.fetchData(`${this.API_BASE}/blocks/tip/height`);
+                    const startHeight = latestHeight - this.TEST_BLOCKS + 1;
+
+                    for (let height = startHeight; height <= latestHeight; height++) {
+                        const hash = await this.fetchData(`${this.API_BASE}/block-height/${height}`);
+                        const blockData = await this.processBlock(hash);
+                        this.blocks.push(blockData);
+                        this.updateRawData();
+                        this.updateHourlyMetrics();
+                        this.updateSummaryMetrics();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    document.body.innerHTML += `
+                        <div style="color: red; padding: 20px;">
+                            Error: ${error.message}
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const metrics = new BitcoinMetrics();
+            metrics.initialize();
+        });
+    </script>
+</body>
+</html>
