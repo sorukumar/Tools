@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Data Labs</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Bitcoin Network Basic Stats</h1>
+            <p class="subtitle">Last 24 hours of Bitcoin network activity</p>
+        </header>
+
+        <div id="loading" class="loading-section">
+            <div class="loading-text">
+                Loading blocks: <span id="currentBlock">0</span> / <span id="totalBlocks">144</span>
+            </div>
+            <div class="progress-bar">
+                <div id="progress" class="progress"></div>
+            </div>
+        </div>
+
+        <div id="content" class="content hidden">
+            <section class="summary-section">
+                <h2>Network Summary</h2>
+                <div id="summaryMetrics" class="metrics-grid"></div>
+            </section>
+
+            <section class="hourly-section">
+                <h2>Hourly Breakdown</h2>
+                <div class="table-container">
+                    <table id="hourlyMetrics">
+                        <thead>
+                            <tr>
+                                <th>Hour</th>
+                                <th>Blocks</th>
+                                <th>Transactions</th>
+                                <th>TPS</th>
+                                <!-- <th>BTC Volume</th> -->
+                                <!-- <th>BTC per Block</th> -->
+                                <!-- <th>BTC per Second</th> -->
+                                <th>Size (MB)</th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
