@@ -3,32 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mining Simulator</title>
+    <title>Bitcoin Mining Simulator - Bitcoin Data Labs</title>
+    
+    <!-- Bitcoin Data Labs base styles -->
+    <link rel="stylesheet" href="https://sorukumar.github.io/Bitcoin-Data-Labs/styles/styles.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Shared tool styles -->
+    <link rel="stylesheet" href="../shared-tool-styles.css">
+    <!-- Local custom styles -->
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Mining Simulator</h1>
-        <div id="blockchain">
+    <!-- Bitcoin Data Labs Header -->
+    <div id="header"></div>
+    
+    <div class="tool-content">
+        <div class="tool-header">
+            <h1>Bitcoin Mining Simulator</h1>
+            <p>Understand Bitcoin mining by creating transactions and mining blocks</p>
+        </div>
+
+        <div class="content-section">
             <h2>Blockchain</h2>
             <div id="blocks"></div>
         </div>
-        <div id="transactionPool">
+        
+        <div class="content-section">
             <h2>Transaction Pool</h2>
             <input type="text" id="recipient" placeholder="Recipient Address">
             <input type="number" id="amount" placeholder="Amount (BTC)">
             <button id="addTransaction">Add Transaction</button>
             <div id="transactionList"></div>
         </div>
-        <div id="mining">
-            <h2>Mining</h2>
-            <label for="difficulty">Difficulty:</label>
+        
+        <div class="content-section">
+            <h2>Mining Controls</h2>
+            <label for="difficulty">Difficulty (1-5):</label>
             <input type="number" id="difficulty" value="2" min="1" max="5">
             <button id="startMining">Start Mining</button>
             <p id="miningStatus"></p>
         </div>
     </div>
+    
+    <!-- Bitcoin Data Labs Footer -->
+    <div id="footer"></div>
+
+    <!-- Bitcoin Data Labs App Components -->
+    <script src="https://sorukumar.github.io/Bitcoin-Data-Labs/components/app-components.js"></script>
+    <script>
+        BitcoinLabsAppComponents.init({
+            isApp: true,
+            appName: 'Bitcoin Mining Simulator',
+            appHomeUrl: window.location.href
+        });
+    </script>
+    
     <script src="script.js"></script>
 </body>
 </html>

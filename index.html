@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Tools - Bitcoin Data Labs</title>
+    
+    <!-- Bitcoin Data Labs base styles -->
+    <link rel="stylesheet" href="https://sorukumar.github.io/Bitcoin-Data-Labs/styles/styles.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Shared tool styles -->
+    <link rel="stylesheet" href="shared-tool-styles.css">
+</head>
+<body>
+    <!-- Bitcoin Data Labs Header -->
+    <div id="header"></div>
+    
+    <!-- Hero Section -->
+    <div class="tools-hero">
+        <p>Educational tools to explore, learn, and experiment with Bitcoin and Lightning Network concepts</p>
+    </div>
+    
+    <!-- Tools Container -->
+    <div class="tools-container">
+        <!-- Lightning Network Tools -->
+        <section>
+            <h2 class="section-title">
+                <i class="fas fa-bolt"></i>
+                Lightning Network
+            </h2>
+            <div class="tools-grid">
+                <a href="lnsimulator/lnsimulator.html" class="tool-card">
+                    <h3><i class="fas fa-project-diagram"></i> Lightning Network Simulator</h3>
+                    <p>Interactive simulator to visualize how payments route through the Lightning Network. Generate networks, send payments, and watch them find their way through channels.</p>
+                    <div class="tool-tags">
+                        <span class="tool-tag">Interactive</span>
+                        <span class="tool-tag">Educational</span>
+                        <span class="tool-tag">Animated</span>
+                    </div>
+                </a>
+                
+                <a href="LNChannelIDDecoder/index.html" class="tool-card">
+                    <h3><i class="fas fa-hashtag"></i> Channel ID Decoder</h3>
+                    <p>Decode Lightning Network short channel IDs into their components: block height, transaction index, and output index.</p>
+                    <div class="tool-tags">
+                        <span class="tool-tag">Utility</span>
+                        <span class="tool-tag">Lightning</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+        
+        <!-- Bitcoin Tools -->
+        <section>
+            <h2 class="section-title">
+                <i class="fab fa-bitcoin"></i>
+                Bitcoin
+            </h2>
+            <div class="tools-grid">
+                <a href="btcminingsimulator/index.html" class="tool-card">
+                    <h3><i class="fas fa-hammer"></i> Bitcoin Mining Simulator</h3>
+                    <p>Learn how Bitcoin mining works through an interactive explanation. See how transactions are processed and blocks are added to the blockchain with proof-of-work.</p>
+                    <div class="tool-tags">
+                        <span class="tool-tag">Interactive</span>
+                        <span class="tool-tag">Educational</span>
+                        <span class="tool-tag">Mining</span>
+                    </div>
+                </a>
+                
+                <a href="BitcoinWitnessDataDecoder/index.html" class="tool-card">
+                    <h3><i class="fas fa-code"></i> Witness Data Decoder</h3>
+                    <p>Decode Bitcoin witness data including P2WPKH, P2WSH, Ordinal inscriptions, and Taproot transactions. Paste hex data to analyze its structure.</p>
+                    <div class="tool-tags">
+                        <span class="tool-tag">Developer</span>
+                        <span class="tool-tag">Technical</span>
+                    </div>
+                </a>
+                
+                <a href="BitcoinBasicStats/index.html" class="tool-card">
+                    <h3><i class="fas fa-chart-bar"></i> Network Stats</h3>
+                    <p>Real-time Bitcoin network statistics from the last 24 hours including blocks, transactions, TPS, and network activity.</p>
+                    <div class="tool-tags">
+                        <span class="tool-tag">Live Data</span>
+                        <span class="tool-tag">Statistics</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+    </div>
+    
+    <!-- Bitcoin Data Labs Footer -->
+    <div id="footer"></div>
+
+    <!-- Bitcoin Data Labs App Components -->
+    <script src="https://sorukumar.github.io/Bitcoin-Data-Labs/components/app-components.js"></script>
+    <script>
+        BitcoinLabsAppComponents.init({
+            isApp: true,
+            appName: 'Tools',
+            appHomeUrl: window.location.href
+        });
+    </script>
+</body>
+</html>

@@ -3,34 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bitcoin Data Labs</title>
+    <title>Bitcoin Network Stats - Bitcoin Data Labs</title>
+    
+    <!-- Bitcoin Data Labs base styles -->
+    <link rel="stylesheet" href="https://sorukumar.github.io/Bitcoin-Data-Labs/styles/styles.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Shared tool styles -->
+    <link rel="stylesheet" href="../shared-tool-styles.css">
+    <!-- Local custom styles -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Bitcoin Network Basic Stats</h1>
-            <p class="subtitle">Last 24 hours of Bitcoin network activity</p>
-        </header>
+    <!-- Bitcoin Data Labs Header -->
+    <div id="header"></div>
+    
+    <div class="tool-content">
+        <div class="tool-header">
+            <h1>Bitcoin Network Stats</h1>
+            <p>Real-time Bitcoin network statistics from the last 24 hours</p>
+        </div>
 
-        <div id="loading" class="loading-section">
-            <div class="loading-text">
-                Loading blocks: <span id="currentBlock">0</span> / <span id="totalBlocks">144</span>
-            </div>
-            <div class="progress-bar">
-                <div id="progress" class="progress"></div>
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+            <div>Loading blocks: <span id="currentBlock">0</span> / <span id="totalBlocks">144</span></div>
+            <div style="max-width: 400px; margin: 1rem auto; background: #eee; height: 20px; border-radius: 10px; overflow: hidden;">
+                <div id="progress" style="background: var(--primary); height: 100%; width: 0%; transition: width 0.3s;"></div>
             </div>
         </div>
 
-        <div id="content" class="content hidden">
-            <section class="summary-section">
+        <div id="content" class="hidden">
+            <div class="content-section">
                 <h2>Network Summary</h2>
                 <div id="summaryMetrics" class="metrics-grid"></div>
-            </section>
+            </div>
 
-            <section class="hourly-section">
+            <div class="content-section">
                 <h2>Hourly Breakdown</h2>
-                <div class="table-container">
+                <div class="table-wrapper">
                     <table id="hourlyMetrics">
                         <thead>
                             <tr>
@@ -38,19 +48,29 @@
                                 <th>Blocks</th>
                                 <th>Transactions</th>
                                 <th>TPS</th>
-                                <!-- <th>BTC Volume</th> -->
-                                <!-- <th>BTC per Block</th> -->
-                                <!-- <th>BTC per Second</th> -->
                                 <th>Size (MB)</th>
-                                
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
                 </div>
-            </section>
+            </div>
         </div>
     </div>
+    
+    <!-- Bitcoin Data Labs Footer -->
+    <div id="footer"></div>
+
+    <!-- Bitcoin Data Labs App Components -->
+    <script src="https://sorukumar.github.io/Bitcoin-Data-Labs/components/app-components.js"></script>
+    <script>
+        BitcoinLabsAppComponents.init({
+            isApp: true,
+            appName: 'Bitcoin Network Stats',
+            appHomeUrl: window.location.href
+        });
+    </script>
+    
     <script src="script.js"></script>
 </body>
 </html>

@@ -3,89 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Lightning Network Animation</title>
+    <title>Lightning Network Simulator - Bitcoin Data Labs</title>
+    
+    <!-- Bitcoin Data Labs base styles -->
+    <link rel="stylesheet" href="https://sorukumar.github.io/Bitcoin-Data-Labs/styles/styles.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Shared tool styles -->
+    <link rel="stylesheet" href="../shared-tool-styles.css">
+    <!-- Local custom styles (only for simulator-specific needs) -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <h1>Lightning Network Simulator</h1>
-        <p>This interactive simulator helps you understand how payments are routed through a Lightning Network. Experiment with different network configurations and see how payments find their way from sender to receiver!</p>
-    </header>
+    <!-- Bitcoin Data Labs Header -->
+    <div id="header"></div>
 
-    <div class="instructions">
-        <h3>How to use:</h3>
-        <ol>
-            <li>Choose the number of nodes and channel probability, then click "Regenerate Network".</li>
-            <li>Select a sender node, receiver node, and payment amount.</li>
-            <li>Click "Send Payment" to see the payment route through the network.</li>
-        </ol>
-    </div>
+    <div class="tool-content">
+        <div class="tool-header">
+            <h1>Lightning Network Simulator</h1>
+            <p>Explore how payments route through the Lightning Network. Create networks, send payments, and watch them find their way!</p>
+        </div>
 
-    <div class="main-container">
-        <div class="controls">
-            <div class="control-group top-controls">
-                <label for="nodeCount">Number of Nodes:</label>
-                <select id="nodeCount">
-                    <option value="7">7</option>
-                    <option value="9">9</option>
-                    <option value="13">13</option>
-                    <option value="17">17</option>
-                    <option value="21">21</option>
-                </select>
+        <div class="instructions-box">
+            <h3>How to use:</h3>
+            <ol>
+                <li>Choose the number of nodes and channel probability, then click "Regenerate Network"</li>
+                <li>Select a sender node, receiver node, and payment amount</li>
+                <li>Click "Send Payment" to see the payment route through the network</li>
+            </ol>
+        </div>
 
-                <label for="channelProbability">Channel Probability:</label>
-                <select id="channelProbability">
-                    <option value="0.3">30%</option>
-                    <option value="0.4">40%</option>
-                    <option value="0.5">50%</option>
-                </select>
+        <div class="simulator-container">
+            <div class="controls">
+                <div class="control-group">
+                    <label for="nodeCount">Number of Nodes:</label>
+                    <select id="nodeCount">
+                        <option value="7">7</option>
+                        <option value="9">9</option>
+                        <option value="13">13</option>
+                        <option value="17">17</option>
+                        <option value="21">21</option>
+                    </select>
 
-                <button id="regenerate">Regenerate Network</button>
+                    <label for="channelProbability">Channel Probability:</label>
+                    <select id="channelProbability">
+                        <option value="0.3">30%</option>
+                        <option value="0.4">40%</option>
+                        <option value="0.5">50%</option>
+                    </select>
+
+                    <button id="regenerate">Regenerate Network</button>
+                </div>
+
+                <div class="control-group">
+                    <label for="senderNode">Sender Node:</label>
+                    <select id="senderNode"></select>
+
+                    <label for="receiverNode">Receiver Node:</label>
+                    <select id="receiverNode"></select>
+
+                    <label for="paymentAmount">Payment Amount:</label>
+                    <select id="paymentAmount">
+                        <option value="1000000">1m sats</option>
+                        <option value="5000000">5m sats</option>
+                        <option value="10000000">10m sats</option>
+                        <option value="50000000">50m sats</option>
+                        <option value="100000000">100m sats</option>
+                        <option value="200000000">200m sats</option>
+                    </select>
+
+                    <button id="sendPayment">Send Payment</button>
+                </div>
             </div>
+            
+            <div class="network" id="network"></div>
+            <div class="tooltip" id="tooltip"></div>
+        </div>
 
-            <div class="control-group sidebar-controls">
-                <label for="senderNode">Sender Node:</label>
-                <select id="senderNode"></select>
-
-                <label for="receiverNode">Receiver Node:</label>
-                <select id="receiverNode"></select>
-
-                <label for="paymentAmount">Payment Amount:</label>
-                <select id="paymentAmount">
-                    <option value="1000000">1m sats</option>
-                    <option value="5000000">5m sats</option>
-                    <option value="10000000">10m sats</option>
-                    <option value="50000000">50m sats</option>
-                    <option value="100000000">100m sats</option>
-                    <option value="200000000">200m sats</option>
-                </select>
-
-                <button id="sendPayment">Send Payment</button>
+        <div class="content-section">
+            <h2>Transaction History</h2>
+            <div class="table-wrapper">
+                <table id="transactionTable">
+                    <thead>
+                        <tr>
+                            <th>Attempt</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Fees</th>
+                            <th>Path</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody"></tbody>
+                </table>
             </div>
         </div>
-        <div class="network" id="network"></div>
-        <div class="tooltip" id="tooltip"></div>
     </div>
-    <div class="transaction-table-container">
-        <h3>Transaction History</h3>
-        <table id="transactionTable">
-            <thead>
-                <tr>
-                    <th>Attempt</th>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Fees</th>
-                    <th>Path</th>
-                    <th>Updated Balances</th>
-                </tr>
-            </thead>
-            <tbody id="transactionTableBody">
-                
-            </tbody>
-        </table>
-    </div>
+    
+    <!-- Bitcoin Data Labs Footer -->
+    <div id="footer"></div>
+
+    <!-- Bitcoin Data Labs App Components -->
+    <script src="https://sorukumar.github.io/Bitcoin-Data-Labs/components/app-components.js"></script>
+    <script>
+        BitcoinLabsAppComponents.init({
+            isApp: true,
+            appName: 'Lightning Network Simulator',
+            appHomeUrl: window.location.href
+        });
+    </script>
+    
     <script src="script.js"></script>
 </body>
 </html>

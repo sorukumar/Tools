@@ -3,125 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lightning Network Channel ID Decoder</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .container {
-            background-color: white;
-            padding: 30px; /* Increased padding for a larger box */
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            max-width: 500px; /* Increased max-width for a larger box */
-            text-align: center;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            padding: 10px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 10px;
-            border: 1px solid #007bff;
-            border-radius: 5px;
-            background-color: #e9f7ff;
-        }
-        .explanation {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #555;
-            text-align: left; /* Align text to the left for better readability */
-        }
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <title>Lightning Channel ID Decoder - Bitcoin Data Labs</title>
+    
+    <!-- Bitcoin Data Labs base styles -->
+    <link rel="stylesheet" href="https://sorukumar.github.io/Bitcoin-Data-Labs/styles/styles.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Shared tool styles -->
+    <link rel="stylesheet" href="../shared-tool-styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Lightning Channel ID Decoder</h1>
-        <p class="explanation">
-            The Lightning Network (LN) uses short channel IDs as unique identifiers for payment channels. 
-            This converter helps you transform a short channel ID into its corresponding components:
-        </p>
-        <ul class="explanation">
-            <li><strong>Block:</strong> The block height where the funding transaction of the channel was confirmed.</li>
-            <li><strong>Transaction:</strong> The transaction index within that block.</li>
-            <li><strong>Output:</strong> The output index of the funding transaction.</li>
-        </ul>
-        <p class="explanation">
-            For example, the short channel ID 
-            <a href="https://mempool.space/lightning/channel/880174451395198976" target="_blank">880174451395198976</a> 
-            is an identifier of a channel in LN gossip data. By using this converter, you can extract the block, transaction, and output information. This is what we see in various LN explorers.
-        </p>
-        <p class="explanation">
-            The result will be displayed in the format: <strong>(Block x Transaction x Output)</strong>, for example: <strong>(800514 x 3017 x 0)</strong>.
-        </p>
-        <p class="explanation">
-            For more details, refer to the <a href="https://github.com/lightning/bolts/blob/master/07-routing-gossip.md" target="_blank">Lightning Network documentation</a>.
-        </p>
-        <label for="channelId">Enter Channel ID (Decimal):</label>
-        <input type="text" id="channelId" placeholder="e.g., 880174451395198976">
-        <button onclick="convertChannelId()">Convert</button>
+    <!-- Bitcoin Data Labs Header -->
+    <div id="header"></div>
+    
+    <div class="tool-content">
+        <div class="tool-header">
+            <h1>Lightning Channel ID Decoder</h1>
+            <p>Convert Lightning Network short channel IDs into their block, transaction, and output components</p>
+        </div>
 
-        <div class="result" id="result" style="display:none;"></div>
+        <div class="instructions-box">
+            <p>The Lightning Network uses short channel IDs as unique identifiers for payment channels. Enter a channel ID below to decode it into:</p>
+            <ul>
+                <li><strong>Block:</strong> The block height where the funding transaction was confirmed</li>
+                <li><strong>Transaction:</strong> The transaction index within that block</li>
+                <li><strong>Output:</strong> The output index of the funding transaction</li>
+            </ul>
+            <p>Example: <a href="https://mempool.space/lightning/channel/880174451395198976" target="_blank">880174451395198976</a> → (800514 x 3017 x 0)</p>
+        </div>
+
+        <div class="content-section">
+            <label for="channelId">Enter Channel ID (Decimal):</label>
+            <input type="text" id="channelId" placeholder="e.g., 880174451395198976">
+            <button onclick="convertChannelId()">Convert</button>
+
+            <div id="result" style="display:none; margin-top: 1.5rem; padding: 1rem; background: var(--bg-secondary); border-radius: 6px; border-left: 4px solid var(--primary);"></div>
+        </div>
     </div>
+
+    <!-- Bitcoin Data Labs Footer -->
+    <div id="footer"></div>
+
+    <!-- Bitcoin Data Labs App Components -->
+    <script src="https://sorukumar.github.io/Bitcoin-Data-Labs/components/app-components.js"></script>
+    <script>
+        BitcoinLabsAppComponents.init({
+            isApp: true,
+            appName: 'Lightning Channel ID Decoder',
+            appHomeUrl: window.location.href
+        });
+    </script>
 
     <script>
         function extractBlockTxOutput(idValue) {
-            const block = idValue >> 40n; // Extract block using BigInt
-            const tx = (idValue >> 16n) & 0xFFFFFFn; // Extract transaction using BigInt
-            const output = idValue & 0xFFFFn; // Extract output using BigInt
-            console.log(`ID Value: ${idValue}, Block: ${block}, Transaction: ${tx}, Output: ${output}`); // Debugging log
+            const block = idValue >> 40n;
+            const tx = (idValue >> 16n) & 0xFFFFFFn;
+            const output = idValue & 0xFFFFn;
             return { block, tx, output };
         }
 
         function convertChannelId() {
             const input = document.getElementById('channelId').value.trim();
-            const idValue = BigInt(input); // Convert string to BigInt
-
-            // Check if the input is a valid number
+            
             if (!/^\d+$/.test(input)) {
                 alert("Please enter a valid decimal channel ID.");
                 return;
             }
 
+            const idValue = BigInt(input);
             const { block, tx, output } = extractBlockTxOutput(idValue);
             const resultDiv = document.getElementById('result');
             resultDiv.style.display = 'block';
             resultDiv.innerHTML = `
-                <strong>Results:</strong><br>
-                Block: ${block}<br>
-                Transaction: ${tx}<br>
-                Output: ${output}<br>
-                Block-TX-Output: (${block} x ${tx} x ${output})
+                <h3 style="margin-top: 0; color: var(--secondary);">Results:</h3>
+                <p><strong>Block:</strong> ${block}</p>
+                <p><strong>Transaction:</strong> ${tx}</p>
+                <p><strong>Output:</strong> ${output}</p>
+                <p style="margin-bottom: 0;"><strong>Format:</strong> ${block} x ${tx} x ${output}</p>
             `;
         }
     </script>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin HD Address Tool - Step-by-Step</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 15px; background-color: #f4f4f4; color: #333; }
+        h1, h2, h3 { color: #222; }
+        .warning { background-color: #ffe0b2; border: 1px solid #ff9800; padding: 15px; margin-bottom: 20px; border-radius: 5px; color: #e65100; font-weight: bold; }
+        .warning p { margin: 5px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        textarea, input[type="text"], input[type="number"] { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #45a049; }
+        #results { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+        .address-item { background-color: #fff; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 4px; word-break: break-all; }
+        .address-item strong { color: #007bff; }
+        .address-item .private-key { color: red; font-family: monospace; }
+        #error-message { color: red; font-weight: bold; margin-top: 10px; }
+        .step { background-color: #e0f2f7; border: 1px solid #b3e5fc; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
+        .step h3 { margin-top: 0; color: #0277bd; }
+        .step pre { background-color: #ffffff; padding: 10px; border: 1px dashed #ccc; overflow-x: auto; font-family: monospace; }
+        .commentary { font-style: italic; color: #555; margin-top: 5px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <h1>Bitcoin HD Address Tool - Step-by-Step Derivation</h1>
+
+    <div class="warning">
+        <h2>&#9888; EXTREME SECURITY WARNING &#9888;</h2>
+        <p><strong>DO NOT enter your live wallet's seed phrase here unless you understand the risks and are doing so on an AIR-GAPPED (offline) computer.</strong></p>
+        <p>This tool runs entirely in your browser, and your seed phrase is never sent to any server. However, browser extensions, malware on your system, or compromised internet connections could still expose your seed. </p>
+        <p><strong>USE AT YOUR OWN RISK. THIS TOOL IS FOR EDUCATIONAL AND TESTING PURPOSES ONLY. It is NOT for daily wallet use.</strong></p>
+        <p><strong>RECOMMENDATION:</strong> Download this HTML file and run it on a computer that is completely disconnected from the internet. Clear your browser's cache and close the browser after use.</p>
+    </div>
+
+    <p>This tool visually demonstrates how Bitcoin addresses (Native SegWit, BIP-84) are derived from a BIP-39 mnemonic seed phrase, following common wallet standards.</p>
+
+    <label for="mnemonic">BIP-39 Mnemonic Seed Phrase (12 or 24 words):</label>
+    <textarea id="mnemonic" rows="3" placeholder="e.g., abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about">test test test test test test test test test test test test</textarea>
+    <p style="font-size: 0.9em; color: #666; margin-top: -5px;"><em>This field is pre-filled with a **test seed phrase** for demonstration. It holds no real value.</em></p>
+
+    <label for="passphrase">Optional BIP-39 Passphrase (leave empty if none):</label>
+    <input type="text" id="passphrase" placeholder="e.g., mysecretpassword">
+
+    <label for="numAddresses">Number of Addresses to Derive (first 0-indexed addresses):</label>
+    <input type="number" id="numAddresses" value="3" min="1" max="10">
+
+    <button id="deriveButton">Derive Addresses Step-by-Step</button>
+
+    <div id="error-message"></div>
+    <div id="results">
+        <h2>Derivation Process:</h2>
+        <div id="derivationSteps"></div>
+        <h2>Derived Addresses:</h2>
+        <div id="addressList"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bip39@3.1.0/dist/bip39.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bip32@2.0.0/dist/bip32.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bitcoinjs-lib@6.1.0/dist/bitcoinjs-lib.min.js"></script>
+
+    <script>
+        const ERROR_MESSAGE_DIV = document.getElementById('error-message');
+        const ADDRESS_LIST_DIV = document.getElementById('addressList');
+        const DERIVE_BUTTON = document.getElementById('deriveButton');
+        const DERIVATION_STEPS_DIV = document.getElementById('derivationSteps');
+
+        function clearMessages() {
+            ERROR_MESSAGE_DIV.textContent = '';
+            ADDRESS_LIST_DIV.innerHTML = '';
+            DERIVATION_STEPS_DIV.innerHTML = '';
+        }
+
+        function addStep(title, data, commentary = '') {
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'step';
+            stepDiv.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${data}</pre>
+                <p class="commentary">${commentary}</p>
+            `;
+            DERIVATION_STEPS_DIV.appendChild(stepDiv);
+        }
+
+        async function deriveAddresses() {
+            clearMessages();
+
+            const mnemonic = document.getElementById('mnemonic').value.trim();
+            const passphrase = document.getElementById('passphrase').value.trim();
+            const numAddresses = parseInt(document.getElementById('numAddresses').value, 10);
+
+            // Basic validation for mnemonic
+            if (!bip39.validateMnemonic(mnemonic)) {
+                ERROR_MESSAGE_DIV.textContent = 'Error: Invalid BIP-39 mnemonic phrase. Please check your words.';
+                return;
+            }
+
+            // Basic validation for number of addresses
+            if (isNaN(numAddresses) || numAddresses < 1 || numAddresses > 10) {
+                ERROR_MESSAGE_DIV.textContent = 'Error: Number of addresses must be between 1 and 10 for step-by-step display.';
+                return;
+            }
+
+            try {
+                // Step 1: Mnemonic to Seed
+                const seed = await bip39.mnemonicToSeed(mnemonic, passphrase);
+                addStep(
+                    'Step 1: Mnemonic to Seed (BIP-39)',
+                    `Seed (Hex): ${seed.toString('hex')}\nSeed Length: ${seed.length} bytes (512 bits)`,
+                    'Your human-readable mnemonic phrase, combined with an optional passphrase, is deterministically converted into a 64-byte (512-bit) binary seed using PBKDF2. This seed is the root of your entire wallet.'
+                );
+
+                // Step 2: Master Extended Key (Root Node)
+                const root = bip32.fromSeed(seed, bitcoin.networks.bitcoin);
+                addStep(
+                    'Step 2: Derive Master Extended Private Key (BIP-32)',
+                    `Master Extended Private Key (xprv): ${root.toBase58()}\nMaster Public Key (xpub): ${root.neutered().toBase58()}`,
+                    'From the 512-bit seed, a Master Extended Private Key (`xprv`) and a Master Extended Public Key (`xpub`) are derived. These are the "root" of your hierarchical deterministic wallet tree. The `xprv` can derive both private and public child keys, while the `xpub` can only derive public child keys (useful for watch-only wallets).'
+                );
+
+                // Step 3: Account Node (BIP-84 Purpose & Coin Type)
+                const pathPurpose = 84; // Native SegWit
+                const pathCoinType = 0; // Bitcoin Mainnet
+                const pathAccount = 0; // First account
+                const accountPath = `m/${pathPurpose}'/${pathCoinType}'/${pathAccount}'`; // Hardened derivation for purpose, coin, and account
+                const accountNode = root.derivePath(accountPath);
+
+                addStep(
+                    `Step 3: Derive Account Node (${accountPath})`,
+                    `Account Extended Private Key (xprv): ${accountNode.toBase58()}\nAccount Extended Public Key (xpub): ${accountNode.neutered().toBase58()}`,
+                    `This step creates an "account" node. The path 'm/${pathPurpose}'/${pathCoinType}'/${pathAccount}'' signifies a Native SegWit wallet (84'), for Bitcoin (0'), and the first account (0'). The apostrophe (') indicates 'hardened' derivation, meaning this key cannot be derived from the parent public key, enhancing security.`
+                );
+
+                // Step 4: Chain Node (External Chain)
+                const pathChange = 0; // External chain (receiving addresses)
+                const changeNode = accountNode.derive(pathChange);
+                addStep(
+                    `Step 4: Derive Change Chain Node (m/84'/0'/0'/${pathChange})`,
+                    `Chain Node Public Key (Hex): ${changeNode.publicKey.toString('hex')}`,
+                    `Within each account, there are typically two "chains": 0 for external/receiving addresses, and 1 for internal/change addresses. We derive the external chain node here. From this point onward, derivation is usually "non-hardened".`
+                );
+
+                // Step 5: Derive and display individual addresses
+                for (let i = 0; i < numAddresses; i++) {
+                    const childNode = changeNode.derive(i); // derive(i) for address index
+
+                    // Get Native SegWit (P2WPKH) address
+                    const { address } = bitcoin.payments.p2wpkh({
+                        pubkey: childNode.publicKey,
+                        network: bitcoin.networks.bitcoin,
+                    });
+
+                    // Get private key in WIF format
+                    const privateKeyWIF = childNode.toWIF();
+
+                    // Get public key (hex)
+                    const publicKeyHex = childNode.publicKey.toString('hex');
+
+                    const addressItem = document.createElement('div');
+                    addressItem.className = 'address-item';
+                    addressItem.innerHTML = `
+                        <p><strong>Path:</strong> m/84'/0'/0'/0/${i}</p>
+                        <p><strong>Address:</strong> ${address}</p>
+                        <p><strong>Public Key (Hex):</strong> ${publicKeyHex}</p>
+                        <p><strong>Private Key (WIF):</strong> <span class="private-key">${privateKeyWIF}</span></p>
+                    `;
+                    ADDRESS_LIST_DIV.appendChild(addressItem);
+
+                    addStep(
+                        `Step 5: Derive Individual Address (m/84'/0'/0'/0/${i})`,
+                        `Derived Child Private Key (Hex): ${childNode.privateKey.toString('hex')}\nDerived Child Public Key (Hex): ${childNode.publicKey.toString('hex')}`,
+                        `From the change chain node, individual private/public key pairs are derived sequentially (index ${i}). The Public Key is then hashed and encoded to generate the final Native SegWit (bech32) Bitcoin address. The Private Key is the secret required to spend funds from this address.`
+                    );
+                }
+
+            } catch (error) {
+                console.error(error);
+                ERROR_MESSAGE_DIV.textContent = `An error occurred: ${error.message}. Please check the browser console for details. Ensure your seed phrase is correct and all external libraries are loaded.`;
+            }
+        }
+
+        // Add the event listener after the DOM is fully loaded AND after external libraries are included.
+        // This 'DOMContentLoaded' listener runs when the HTML is parsed, and since the script tags for the
+        // libraries are *before* this script, they will have already loaded.
+        document.addEventListener('DOMContentLoaded', () => {
+            DERIVE_BUTTON.addEventListener('click', deriveAddresses);
+            // Optionally, run for the default test phrase on load for immediate demo
+            // deriveAddresses();
+        });
+    </script>
+</body>
+</html>

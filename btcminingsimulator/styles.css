@@ -1,87 +1,119 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 20px;
-}
+/* Bitcoin Mining Simulator - Custom Styles */
+/* Only tool-specific styling - general styles come from shared-tool-styles.css */
 
-.container {
-    max-width: 1200px;
-    margin: auto;
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-h1, h2 {
-    color: #333;
-}
-
-.grid-container {
+.mining-grid {
     display: grid;
-    grid-template-columns: 1fr 1.5fr; /* Two columns with different widths */
-    gap: 20px; /* Space between columns */
+    grid-template-columns: 1fr 1.5fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
-.left-column, .right-column {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background: #f9f9f9;
-}
-
-button {
-    padding: 10px 15px;
-    margin-top: 10px;
-    cursor: pointer;
-}
-
-input {
-    padding: 10px;
-    margin-top: 10px;
-    width: calc(100% - 22px);
+.mining-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 #transactionList {
-    margin-top: 10px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background: #f9f9f9;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    min-height: 100px;
 }
 
 #miningVisualization {
-    margin-top: 20px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background: #f9f9f9;
-    height: 150px; /* Set a fixed height */
-    overflow-y: auto; /* Allow scrolling if content overflows */
-    white-space: pre-wrap; /* Preserve whitespace for formatting */
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    min-height: 150px;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 0.9rem;
 }
 
-#hashFormula {
-    margin-top: 20px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background: #f9f9f9;
+#blocks {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
-#hashDefinitions {
-    margin-top: 10px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background: #e9f7ef; /* Light green background for definitions */
+.block {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary);
+}
+
+.block.valid {
+    border-left-color: #28a745;
+}
+
+.block.invalid {
+    border-left-color: #dc3545;
 }
 
 #explanation {
-    margin-top: 20px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background: #f9f9f9;
+    margin-top: 1rem;
+}
+
+#explanationText {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+code {
+    display: block;
+    background: var(--bg-secondary);
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin: 0.5rem 0;
+    font-family: monospace;
+    color: var(--secondary);
+}
+
+/* Hash Formula Section */
+.content-section h3 {
+    font-size: 1.1rem;
+    color: var(--secondary);
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+#exampleCalculation,
+#hashInputs {
+    background: var(--bg-secondary);
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    word-break: break-all;
+}
+
+#hashDefinitions {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-top: 0.75rem;
+}
+
+#hashDefinitions p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+#hashDefinitions strong {
+    color: var(--secondary);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 968px) {
+    .mining-grid {
+        grid-template-columns: 1fr;
+    }
 }

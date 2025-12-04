@@ -3,149 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bitcoin Witness Data Decoder</title>
+    <title>Bitcoin Witness Data Decoder - Bitcoin Data Labs</title>
+    
+    <!-- Bitcoin Data Labs base styles -->
+    <link rel="stylesheet" href="https://sorukumar.github.io/Bitcoin-Data-Labs/styles/styles.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Shared tool styles -->
+    <link rel="stylesheet" href="../shared-tool-styles.css">
+    <!-- Tailwind for this tool (already using it) -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="script.js" defer></script>
 </head>
-<body class="bg-gray-50 min-h-screen p-8">
-    <div class="max-w-6xl mx-auto">
-        <h1 class="text-3xl font-bold mb-8 text-center">Bitcoin Witness Data Decoder</h1>
-        
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <!-- Examples Section -->
+<body>
+    <!-- Bitcoin Data Labs Header -->
+    <div id="header"></div>
+    
+    <div class="tool-content">
+        <div class="tool-header">
+            <h1>Bitcoin Witness Data Decoder</h1>
+            <p>Decode witness data from Bitcoin transactions including P2WPKH, P2WSH, Ordinals, and Taproot</p>
+        </div>
+
+        <div class="content-section">
             <div class="mb-6">
-                <h2 class="text-xl font-bold mb-4">Quick Start with Examples</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                    <button onclick="loadExample('p2wpkh')" class="bg-blue-100 hover:bg-blue-200 p-2 rounded">
-                        Load P2WPKH Example
+                <h3 class="font-bold mb-3">Quick Start Examples</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <button onclick="loadExample('p2wpkh')" class="bg-blue-100 hover:bg-blue-200 p-2 rounded transition">
+                        P2WPKH
                     </button>
-                    <button onclick="loadExample('p2wsh')" class="bg-green-100 hover:bg-green-200 p-2 rounded">
-                        Load P2WSH Example
+                    <button onclick="loadExample('p2wsh')" class="bg-green-100 hover:bg-green-200 p-2 rounded transition">
+                        P2WSH
                     </button>
-                    <button onclick="loadExample('ordinal')" class="bg-yellow-100 hover:bg-yellow-200 p-2 rounded">
-                        Load Ordinal Example
+                    <button onclick="loadExample('ordinal')" class="bg-yellow-100 hover:bg-yellow-200 p-2 rounded transition">
+                        Ordinal
                     </button>
-                    <button onclick="loadExample('taproot')" class="bg-purple-100 hover:bg-purple-200 p-2 rounded">
-                        Load Taproot Example
+                    <button onclick="loadExample('taproot')" class="bg-purple-100 hover:bg-purple-200 p-2 rounded transition">
+                        Taproot
                     </button>
                 </div>
-                <div id="exampleDescription" class="text-sm text-gray-600 italic mb-4"></div>
+                <div id="exampleDescription" class="text-sm text-gray-600 italic mt-3"></div>
             </div>
 
-            <!-- Input Section -->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="witnessInput">
-                    Witness Data (hex):
-                </label>
-                <textarea 
-                    id="witnessInput"
-                    class="w-full p-3 border rounded-lg h-32 font-mono text-sm"
-                    placeholder="Enter witness data in hex format or use the example buttons above..."
-                ></textarea>
-            </div>
+            <label for="witnessInput">Witness Data (hex):</label>
+            <textarea 
+                id="witnessInput"
+                class="w-full p-3 border rounded-lg h-32 font-mono text-sm"
+                placeholder="Enter witness data in hex format or use the example buttons above..."
+            ></textarea>
 
-            <!-- Decode Button -->
-            <button 
-                onclick="decodeWitnessData()"
-                class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-            >
-                Decode
-            </button>
-
-            <!-- Results Section -->
+            <button onclick="decodeWitnessData()">Decode</button>
             <div id="result" class="mt-6"></div>
         </div>
 
-        <!-- Information Panels -->
-        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Supported Types Panel -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-bold mb-4">Supported Witness Types</h2>
-                <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div class="content-section">
+                <h2>Supported Types</h2>
+                <div class="space-y-3">
                     <div>
-                        <h3 class="font-bold text-lg text-blue-600">P2WPKH</h3>
-                        <ul class="list-disc pl-5 space-y-1 text-sm">
-                            <li>DER signature validation (71-73 bytes)</li>
-                            <li>Public key format detection</li>
-                            <li>SIGHASH type identification</li>
-                            <li>Signature component analysis</li>
-                        </ul>
+                        <h3 class="font-bold text-blue-600">P2WPKH</h3>
+                        <p class="text-sm text-gray-600">Pay-to-Witness-Public-Key-Hash signatures</p>
                     </div>
-                    
                     <div>
-                        <h3 class="font-bold text-lg text-green-600">P2WSH</h3>
-                        <ul class="list-disc pl-5 space-y-1 text-sm">
-                            <li>Stack item analysis</li>
-                            <li>Script pattern detection</li>
-                            <li>Witness stack breakdown</li>
-                            <li>Script complexity assessment</li>
-                        </ul>
+                        <h3 class="font-bold text-green-600">P2WSH</h3>
+                        <p class="text-sm text-gray-600">Pay-to-Witness-Script-Hash transactions</p>
                     </div>
-
                     <div>
-                        <h3 class="font-bold text-lg text-yellow-600">Ordinal Inscriptions</h3>
-                        <ul class="list-disc pl-5 space-y-1 text-sm">
-                            <li>Content type detection</li>
-                            <li>Metadata extraction</li>
-                            <li>Size metrics</li>
-                            <li>Protocol compliance</li>
-                        </ul>
+                        <h3 class="font-bold text-yellow-600">Ordinals</h3>
+                        <p class="text-sm text-gray-600">Ordinal inscriptions with content</p>
                     </div>
-
                     <div>
-                        <h3 class="font-bold text-lg text-purple-600">Taproot</h3>
-                        <ul class="list-disc pl-5 space-y-1 text-sm">
-                            <li>Schnorr signature validation</li>
-                            <li>Key/Script path detection</li>
-                            <li>Control block analysis</li>
-                            <li>Leaf version checking</li>
-                        </ul>
+                        <h3 class="font-bold text-purple-600">Taproot</h3>
+                        <p class="text-sm text-gray-600">Schnorr signatures and taproot scripts</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Data Conversion & Legend -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-bold mb-4">Data Conversion & Legend</h2>
-                <!-- Hex to ASCII Converter -->
-                <div class="mb-6">
-                    <h3 class="font-bold text-lg mb-2">Hex Converter</h3>
-                    <div class="space-y-2">
-                        <input type="text" id="hexInput" 
-                               class="w-full p-2 border rounded" 
-                               placeholder="Enter hex value..."
-                               onchange="convertHex()">
-                        <input type="text" id="asciiOutput" 
-                               class="w-full p-2 border rounded bg-gray-100" 
-                               readonly 
-                               placeholder="ASCII result">
-                    </div>
-                </div>
-
-                <!-- Color Legend -->
+            <div class="content-section">
+                <h2>Hex Converter</h2>
                 <div class="space-y-2">
-                    <h3 class="font-bold text-lg mb-2">Witness Data Structure</h3>
-                    <div class="grid grid-cols-1 gap-2">
-                        <div class="flex items-center">
-                            <div class="w-6 h-6 bg-yellow-200 rounded mr-2"></div>
-                            <span>Signatures (DER/Schnorr)</span>
-                        </div>
-                        <div class="flex items-center">
-                            <div class="w-6 h-6 bg-blue-200 rounded mr-2"></div>
-                            <span>Protocol Markers</span>
-                        </div>
-                        <div class="flex items-center">
-                            <div class="w-6 h-6 bg-green-200 rounded mr-2"></div>
-                            <span>Public Keys & Metadata</span>
-                        </div>
-                        <div class="flex items-center">
-                            <div class="w-6 h-6 bg-purple-200 rounded mr-2"></div>
-                            <span>Content & Data</span>
-                        </div>
-                    </div>
+                    <input type="text" id="hexInput" placeholder="Enter hex value..." onchange="convertHex()">
+                    <input type="text" id="asciiOutput" readonly placeholder="ASCII result" class="bg-gray-100">
                 </div>
             </div>
         </div>
     </div>
+    
+    <!-- Bitcoin Data Labs Footer -->
+    <div id="footer"></div>
+
+    <!-- Bitcoin Data Labs App Components -->
+    <script src="https://sorukumar.github.io/Bitcoin-Data-Labs/components/app-components.js"></script>
+    <script>
+        BitcoinLabsAppComponents.init({
+            isApp: true,
+            appName: 'Bitcoin Witness Decoder',
+            appHomeUrl: window.location.href
+        });
+    </script>
 </body>
 </html>

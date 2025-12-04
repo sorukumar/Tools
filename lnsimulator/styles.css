@@ -1,100 +1,90 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
+/* Lightning Network Simulator - Custom Styles */
+/* Only simulator-specific styling - general styles come from shared-tool-styles.css */
+
+.simulator-container {
     display: flex;
-    flex-direction: column; /* Stack elements vertically */
-    min-height: 100vh; /* Full height of the viewport */
-}
-
-header {
-    margin-bottom: 20px;
-}
-
-.instructions {
-    margin-bottom: 20px; /* Space between instructions and controls */
-}
-
-.main-container {
-    display: flex; /* Use flexbox for the main container */
-    flex-grow: 1; /* Allow it to take the remaining space */
+    gap: 1rem;
+    margin-bottom: 2rem;
 }
 
 .controls {
-    display: flex;
-    flex-direction: column; 
-    width: 250px; /* Fixed width for the controls */
-    padding: 10px; /* Add some padding */
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    background-color: #f0f0f0; /* Background color for better contrast */
-    height: 100%;
+    flex-shrink: 0;
+    width: 250px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1rem;
 }
 
-.top-controls {
-    display: flex; /* Align items in the top control group vertically */
-    flex-direction: column; /* Stack items vertically */
-    margin-bottom: 15px; /* Space below the top controls */
-    background-color: #e0e0e0; /* Different background color for top controls */
-    padding: 10px; /* Padding for top controls */
-    border-radius: 5px; /* Optional: Rounded corners */
+.control-group {
+    background: white;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
 }
 
-.sidebar-controls {
-    display: flex;
-    flex-direction: column; 
-    background-color: #ffffff; /* Different background color for sidebar controls */
-    padding: 10px; /* Padding for sidebar controls */
-    border-radius: 5px; /* Optional: Rounded corners */
+.control-group:last-child {
+    margin-bottom: 0;
 }
 
-.sidebar-controls label,
-.sidebar-controls select,
-.sidebar-controls button {
-    margin-bottom: 8px; /* Reduced space between elements in the sidebar */
+.control-group label {
+    font-size: 0.9rem;
 }
 
-label {
-    margin-right: 5px; /* Reduced margin for a more compact look */
+.control-group select,
+.control-group button {
+    width: 100%;
+    margin-bottom: 0.75rem;
 }
 
-select, button {
-    margin-right: 10px; /* Reduced margin for a more compact look */
+.control-group button:last-child {
+    margin-bottom: 0;
 }
 
 .network {
-    flex-grow: 1; /* Allow the network graph to take the remaining space */
-    padding: 10px; /* Add some padding */
-    background-color: #f9f9f9; /* Background color for the network area */
-    border-left: 1px solid #ddd; /* Border to separate from the sidebar */
+    flex: 1;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     position: relative;
-    height: 600px; /* Fixed height for the network area */
-    overflow: hidden; /* Hide overflow to keep it tidy */
+    height: 600px;
+    overflow: hidden;
 }
 
 .node {
     position: absolute;
     width: 30px;
     height: 30px;
-    background-color: #3498db;
+    background-color: var(--accent-cool);
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     color: white;
     font-weight: bold;
+    font-size: 0.8rem;
     cursor: pointer;
     transition: transform 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .node:hover {
-    transform: scale(1.1);
+    transform: scale(1.15);
+}
+
+.node.highlighted {
+    background-color: #f39c12;
+    box-shadow: 0 0 10px #f39c12;
 }
 
 .channel {
     position: absolute;
-    transform-origin: 0 50%; /* Keep this to start from the center */
+    transform-origin: 0 50%;
     transition: opacity 0.2s;
     overflow: hidden;
+}
+
+.channel.highlighted {
+    box-shadow: 0 0 10px #f39c12;
 }
 
 .channel-balance {
@@ -103,120 +93,51 @@ select, button {
 }
 
 .balance1 {
-    background-color: #3498db;
+    background-color: var(--accent-cool);
 }
 
 .balance2 {
-    background-color: #2ecc71;
-}
-
-.channel:hover {
-    opacity: 0.8;
+    background-color: var(--primary);
 }
 
 .transaction {
     position: absolute;
-    width: 10px;
-    height: 10px;
-    background-color: #e74c3c;
+    width: 12px;
+    height: 12px;
+    background-color: #f39c12;
     border-radius: 50%;
+    box-shadow: 0 0 10px #f39c12;
 }
 
 .tooltip {
     position: absolute;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(42, 51, 66, 0.95);
     color: white;
-    padding: 5px;
-    border-radius: 3px;
+    padding: 8px 12px;
+    border-radius: 5px;
     font-size: 12px;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.3s;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.legend {
-    margin-top: 15px; /* Reduced margin for a more compact look */
+.table-wrapper {
+    overflow-x: auto;
 }
 
-.legend ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.legend li {
-    margin-bottom: 5px;
-}
-
-.node-icon, .channel-icon {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-    vertical-align: middle;
-}
-
-.node-icon {
-    background-color: #3498db;
-    border-radius: 50%;
-}
-
-.channel-icon {
-    background-color: #2ecc71;
-}
-
-.channel-icon.small {
-    height: 2px;
-}
-
-.channel-icon.medium {
-    height: 4px;
-}
-
-.channel-icon.large {
-    height: 6px;
-}
-
-.instructions {
-    margin-top: 15px; /* Reduced margin for a more compact look */
-}
-
-.instructions ol {
-    padding-left: 20px;
-}
-
-.highlighted {
-    box-shadow: 0 0 10px #f39c12;
-}
-
-.node.highlighted {
-    background-color: #f39c12;
-}
-
-.channel.highlighted {
-    background-color: #f39c12;
-}
-
-.transaction-table-container {
-    margin-top: 20px;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-#transactionTable {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-#transactionTable th, #transactionTable td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-#transactionTable th {
-    background-color: #f2f2f2;
-}
-
-#transactionTable tr:nth-child(even) {
-    background-color: #f9f9f9;
+/* Mobile responsiveness */
+@media (max-width: 968px) {
+    .simulator-container {
+        flex-direction: column;
+    }
+    
+    .controls {
+        width: 100%;
+    }
+    
+    .network {
+        height: 400px;
+    }
 }
