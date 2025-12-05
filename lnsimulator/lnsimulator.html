@@ -19,51 +19,61 @@
     <div id="header"></div>
 
     <div class="tool-content">
-        <div class="tool-header">
-            <h1>Lightning Network Simulator</h1>
-            <p>Explore how payments route through the Lightning Network. Create networks, send payments, and watch them find their way!</p>
+        <!-- <div class="tool-header">
+            <h1>⚡ Lightning Network Simulator 3D</h1>
+            <p>Experience how payments route through the Lightning Network in stunning 3D. Watch lightning bolts travel through channels in real-time!</p>
+        </div> -->
+
+        <div class="instructions-section">
+            <div class="instructions-header">
+                <h3>How to use:</h3>
+                <button class="instructions-toggle" id="instructionsToggle">
+                    <i class="fas fa-chevron-up"></i>
+                </button>
+            </div>
+            <div class="instructions-content">
+                <ol>
+                    <li>🎲 Configure network and click "Regenerate"</li>
+                    <li>💸 Select nodes, amount, and click "Send Payment"</li>
+                    <li>⚡ Watch lightning route through the network!</li>
+                    <li>🔄 Drag to rotate, scroll to zoom, right-click to pan</li>
+                </ol>
+            </div>
         </div>
 
-        <div class="instructions-box">
-            <h3>How to use:</h3>
-            <ol>
-                <li>Choose the number of nodes and channel probability, then click "Regenerate Network"</li>
-                <li>Select a sender node, receiver node, and payment amount</li>
-                <li>Click "Send Payment" to see the payment route through the network</li>
-            </ol>
-        </div>
-
-        <div class="simulator-container">
-            <div class="controls">
-                <div class="control-group">
-                    <label for="nodeCount">Number of Nodes:</label>
-                    <select id="nodeCount">
-                        <option value="7">7</option>
-                        <option value="9">9</option>
-                        <option value="13">13</option>
-                        <option value="17">17</option>
-                        <option value="21">21</option>
+        <!-- Top Control Bar -->
+        <div class="control-bar">
+            <div class="control-row">
+                <div class="control-section">
+                    <label><i class="fas fa-project-diagram"></i> Network</label>
+                    <select id="nodeCount" title="Number of Nodes">
+                        <option value="7">7 nodes</option>
+                        <option value="9" selected>9 nodes</option>
+                        <option value="13">13 nodes</option>
+                        <option value="17">17 nodes</option>
+                        <option value="21">21 nodes</option>
                     </select>
-
-                    <label for="channelProbability">Channel Probability:</label>
-                    <select id="channelProbability">
+                    <select id="channelProbability" title="Channel Density">
                         <option value="0.3">30%</option>
-                        <option value="0.4">40%</option>
+                        <option value="0.4" selected>40%</option>
                         <option value="0.5">50%</option>
                     </select>
-
-                    <button id="regenerate">Regenerate Network</button>
+                    <button id="regenerate" class="btn btn-secondary" title="Regenerate Network">
+                        <i class="fas fa-sync-alt"></i> Regenerate
+                    </button>
                 </div>
 
-                <div class="control-group">
-                    <label for="senderNode">Sender Node:</label>
-                    <select id="senderNode"></select>
+                <div class="control-divider"></div>
 
-                    <label for="receiverNode">Receiver Node:</label>
-                    <select id="receiverNode"></select>
-
-                    <label for="paymentAmount">Payment Amount:</label>
-                    <select id="paymentAmount">
+                <div class="control-section">
+                    <label><i class="fas fa-bolt"></i> Payment</label>
+                    <select id="senderNode" title="Sender Node">
+                        <option value="">Sender...</option>
+                    </select>
+                    <select id="receiverNode" title="Receiver Node">
+                        <option value="">Receiver...</option>
+                    </select>
+                    <select id="paymentAmount" title="Payment Amount">
                         <option value="1000000">1m sats</option>
                         <option value="5000000">5m sats</option>
                         <option value="10000000">10m sats</option>
@@ -71,38 +81,126 @@
                         <option value="100000000">100m sats</option>
                         <option value="200000000">200m sats</option>
                     </select>
-
-                    <button id="sendPayment">Send Payment</button>
+                    <button id="sendPayment" class="btn" title="Send Payment">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
                 </div>
+
+                <div class="control-spacer"></div>
             </div>
-            
-            <div class="network" id="network"></div>
-            <div class="tooltip" id="tooltip"></div>
         </div>
 
-        <div class="content-section">
-            <h2>Transaction History</h2>
-            <div class="table-wrapper">
-                <table id="transactionTable">
-                    <thead>
-                        <tr>
-                            <th>Attempt</th>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                            <th>Fees</th>
-                            <th>Path</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactionTableBody"></tbody>
-                </table>
+        <!-- 3D Visualization with Overlay Stats -->
+        <div class="visualization-container">
+            <div class="network-3d" id="network3d">
+                <button id="toggleStats" class="btn btn-ghost btn-small floating-stats-btn" title="Toggle Stats Panel">
+                    <i class="fas fa-chart-bar"></i>
+                </button>
+                <div class="camera-controls">
+                    <button id="resetCamera" class="icon-btn" title="Reset Camera">
+                        <i class="fas fa-home"></i>
+                    </button>
+                    <button id="autoRotate" class="icon-btn" title="Auto Rotate">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                </div>
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="loading-spinner"></div>
+                    <p>Generating Network...</p>
+                </div>
+                <!-- Overlay Stats Panel moved inside network-3d -->
+                <div class="stats-overlay" id="statsOverlay">
+                    <div class="stats-header">
+                        <h4><i class="fas fa-chart-line"></i> Network Stats</h4>
+                        <button class="stats-close" id="statsClose">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-database"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Capacity</div>
+                                <div class="stat-value" id="statTotalCapacity">0 BTC</div>
+                            </div>
+                        </div>
+                        <!--
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-label">Success Rate</div>
+                                <div class="stat-value" id="statSuccessRate">0%</div>
+                            </div>
+                        </div>
+                        -->
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-link"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-label">Active Channels</div>
+                                <div class="stat-value" id="statChannels">0</div>
+                            </div>
+                        </div>
+                        <!--
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-exchange-alt"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Payments</div>
+                                <div class="stat-value" id="statTotalPayments">0</div>
+                            </div>
+                        </div>
+                        -->
+                    </div>
+                </div>
+                <div class="tooltip-3d" id="tooltip3d"></div>
+            </div>
+        </div>
+
+        <!-- Collapsible Transaction History -->
+        <div class="transaction-section">
+            <div class="transaction-header" id="transactionHeader">
+                <h3><i class="fas fa-history"></i> Recent Transactions</h3>
+                <button class="transaction-toggle" id="transactionToggle">
+                    <span id="transactionCount">0 transactions</span>
+                    <i class="fas fa-chevron-up"></i>
+                </button>
+            </div>
+            <div class="transaction-content" id="transactionContent">
+                <div class="table-wrapper">
+                    <table id="transactionTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Time</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Fees</th>
+                                <th>Path</th>
+                                <th>Hops</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTableBody">
+                            <tr class="empty-state">
+                                <td colspan="9" style="text-align: center; padding: 2rem; color: #999;">
+                                    <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                                    No transactions yet. Send your first payment to get started!
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
     
     <!-- Bitcoin Data Labs Footer -->
     <div id="footer"></div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
     <!-- Bitcoin Data Labs App Components -->
     <script src="https://sorukumar.github.io/Bitcoin-Data-Labs/components/app-components.js"></script>

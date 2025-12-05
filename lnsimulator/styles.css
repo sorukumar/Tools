@@ -1,143 +1,841 @@
 /* Lightning Network Simulator - Custom Styles */
-/* Only simulator-specific styling - general styles come from shared-tool-styles.css */
+/* REDESIGNED: Visualization-first approach with top controls and overlay stats */
+/* NOTE: Button and form styles inherited from shared-tool-styles.css */
 
-.simulator-container {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.controls {
-    flex-shrink: 0;
-    width: 250px;
-    background: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1rem;
-}
-
-.control-group {
-    background: white;
-    border-radius: 6px;
-    padding: 1rem;
+/* ============================================================================
+   TOP CONTROL BAR (Horizontal Layout) - Compact Side-by-Side
+   ============================================================================ */
+.control-bar {
+    background: var(--bg-secondary, #f8f9fa);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
     margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border, #e9ecef);
 }
 
-.control-group:last-child {
-    margin-bottom: 0;
-}
-
-.control-group label {
-    font-size: 0.9rem;
-}
-
-.control-group select,
-.control-group button {
-    width: 100%;
-    margin-bottom: 0.75rem;
-}
-
-.control-group button:last-child {
-    margin-bottom: 0;
-}
-
-.network {
-    flex: 1;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    position: relative;
-    height: 600px;
-    overflow: hidden;
-}
-
-.node {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    background-color: var(--accent-cool);
-    border-radius: 50%;
+.control-row {
     display: flex;
-    justify-content: center;
     align-items: center;
-    color: white;
-    font-weight: bold;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: transform 0.2s;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    gap: 1.5rem;
+    flex-wrap: wrap;
 }
 
-.node:hover {
-    transform: scale(1.15);
+.control-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
 }
 
-.node.highlighted {
-    background-color: #f39c12;
-    box-shadow: 0 0 10px #f39c12;
+.control-section label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
 }
 
-.channel {
-    position: absolute;
-    transform-origin: 0 50%;
-    transition: opacity 0.2s;
+.control-section label i {
+    color: var(--primary, #e8916b);
+}
+
+/* Compact select dropdowns - override shared styles for tighter layout */
+.control-section select {
+    width: auto;
+    min-width: 90px;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    /* Optionally add a custom arrow icon as a background image here */
+}
+
+.control-divider {
+    width: 1px;
+    height: 32px;
+    background: linear-gradient(to bottom, transparent, var(--border, #ddd), transparent);
+    flex-shrink: 0;
+}
+
+.control-spacer {
+    flex: 1;
+    min-width: 20px;
+}
+
+/* Compact buttons for control bar */
+.control-section .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+.btn-small {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+}
+
+/* ============================================================================
+   VISUALIZATION CONTAINER (Full Width + Taller)
+   ============================================================================ */
+.visualization-container {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.network-3d {
+    width: 100%;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #3a2f2a 100%);
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    position: relative;
+    height: 85vh;
+    min-height: 600px;
+    max-height: 900px;
     overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    cursor: grab;
 }
 
-.channel.highlighted {
-    box-shadow: 0 0 10px #f39c12;
+.network-3d:active {
+    cursor: grabbing;
 }
 
-.channel-balance {
-    height: 100%;
-    float: left;
-}
-
-.balance1 {
-    background-color: var(--accent-cool);
-}
-
-.balance2 {
-    background-color: var(--primary);
-}
-
-.transaction {
+/* ============================================================================
+   OVERLAY STATS PANEL (Glassmorphism)
+   ============================================================================ */
+.stats-overlay {
     position: absolute;
-    width: 12px;
-    height: 12px;
-    background-color: #f39c12;
-    border-radius: 50%;
-    box-shadow: 0 0 10px #f39c12;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(26, 26, 26, 0.9);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 1rem;
+    min-width: 320px;
+    max-width: 380px;
+    border: 1px solid rgba(232, 145, 107, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    z-index: 10;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.tooltip {
-    position: absolute;
-    background-color: rgba(42, 51, 66, 0.95);
+.stats-overlay.hidden {
+    transform: translateY(calc(100% + 20px));
+    opacity: 0;
+    pointer-events: none;
+}
+
+.stats-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(232, 145, 107, 0.3);
+}
+
+.stats-header h4 {
+    margin: 0;
     color: white;
-    padding: 8px 12px;
-    border-radius: 5px;
-    font-size: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stats-header h4 i {
+    color: #E8916B;
+}
+
+.stats-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0.25rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.stats-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stat-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(232, 145, 107, 0.2) 0%, rgba(232, 145, 107, 0.05) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-icon i {
+    font-size: 1.2rem;
+    color: #E8916B;
+}
+
+.stat-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+}
+
+/* ============================================================================
+   CAMERA CONTROLS
+   ============================================================================ */
+.camera-controls {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+}
+
+.icon-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    color: var(--primary, #e8916b);
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.icon-btn:hover {
+    background: white;
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.icon-btn.active {
+    background: var(--accent-cool, #00d4ff);
+    color: white;
+}
+
+/* ============================================================================
+   LOADING OVERLAY
+   ============================================================================ */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 100;
+    color: white;
+    border-radius: 12px;
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.loading-spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid var(--accent-cool, #00d4ff);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+.loading-overlay p {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* ============================================================================
+   3D TOOLTIP (Enhanced)
+   ============================================================================ */
+.tooltip-3d {
+    position: absolute;
+    background: linear-gradient(135deg, rgba(15, 32, 39, 0.98) 0%, rgba(44, 83, 100, 0.98) 100%);
+    color: white;
+    padding: 0;
+    border-radius: 8px;
+    font-size: 13px;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.3s;
     z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    max-width: 350px;
+    border: 1px solid rgba(232, 145, 107, 0.3);
 }
 
-.table-wrapper {
-    overflow-x: auto;
+.tooltip-3d.visible {
+    opacity: 1;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 968px) {
-    .simulator-container {
-        flex-direction: column;
+.tooltip-header {
+    background: linear-gradient(135deg, #8293AB 0%, #E8916B 100%);
+    padding: 10px 14px;
+    border-radius: 8px 8px 0 0;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tooltip-header i {
+    font-size: 16px;
+}
+
+.tooltip-body {
+    padding: 12px 14px;
+    line-height: 1.6;
+}
+
+.tooltip-section {
+    margin-bottom: 10px;
+}
+
+.tooltip-section:last-child {
+    margin-bottom: 0;
+}
+
+.tooltip-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+}
+
+.tooltip-value {
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.tooltip-value.highlight {
+    color: #00d4ff;
+    font-size: 16px;
+}
+
+.tooltip-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    margin: 10px 0;
+}
+
+.balance-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 8px;
+    display: flex;
+}
+
+.balance-bar-fill {
+    height: 100%;
+    transition: width 0.3s;
+}
+
+.balance-bar-left {
+    background: linear-gradient(90deg, #8293AB, #6B7B8C);
+}
+
+.balance-bar-right {
+    background: linear-gradient(90deg, #E8916B, #B8755A);
+}
+
+.balance-legend {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 11px;
+}
+
+.balance-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.balance-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.balance-dot.left {
+    background: #8293AB;
+}
+
+.balance-dot.right {
+    background: #E8916B;
+}
+
+.channel-list {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-top: 6px;
+}
+
+.channel-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.channel-item:last-child {
+    margin-bottom: 0;
+}
+
+.channel-peer {
+    color: #E8916B;
+    font-weight: 600;
+}
+
+.channel-capacity {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Custom scrollbar for channel list */
+.channel-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.channel-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.channel-list::-webkit-scrollbar-thumb {
+    background: rgba(0, 212, 255, 0.5);
+    border-radius: 3px;
+}
+
+.channel-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 212, 255, 0.7);
+}
+
+/* ============================================================================
+   TRANSACTION SECTION (Collapsible)
+   ============================================================================ */
+.transaction-section {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.transaction-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    border-bottom: 1px solid #e9ecef;
+}
+
+.transaction-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.transaction-toggle {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.transaction-toggle:hover {
+    background: #f8f9fa;
+    border-color: var(--accent-cool, #00d4ff);
+    color: var(--text-primary);
+}
+
+.transaction-toggle i {
+    transition: transform 0.3s;
+}
+
+.transaction-section.collapsed .transaction-toggle i {
+    transform: rotate(180deg);
+}
+
+.transaction-content {
+    max-height: 600px;
+    overflow-y: auto;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transaction-section.collapsed .transaction-content {
+    max-height: 0;
+    overflow: hidden;
+}
+
+/* Transaction Table - inherits from shared-tool-styles.css */
+#transactionTable thead {
+    background: linear-gradient(135deg, var(--accent-cool, #00d4ff) 0%, var(--primary, #e8916b) 100%);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-failed {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.path-display {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--accent-cool, #00d4ff);
+}
+
+.empty-state {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Animation for new transactions */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
     }
-    
-    .controls {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.transaction-new {
+    animation: slideIn 0.5s ease-out;
+}
+
+/* ============================================================================
+   INSTRUCTIONS SECTION (Collapsible)
+   ============================================================================ */
+.instructions-section {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.instructions-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    border-bottom: 1px solid #e9ecef;
+}
+
+.instructions-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.instructions-toggle {
+    background: var(--bg-primary);
+    border: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.instructions-toggle:hover {
+    background: var(--bg-secondary);
+    border-color: var(--accent-cool, #00d4ff);
+    color: var(--text-primary);
+}
+
+.instructions-toggle i {
+    transition: transform 0.3s;
+}
+
+.instructions-section.collapsed .instructions-toggle i {
+    transform: rotate(180deg);
+}
+
+.instructions-content {
+    max-height: 600px;
+    overflow-y: auto;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0 1.5rem 1.25rem;
+}
+
+.instructions-section.collapsed .instructions-content {
+    max-height: 0;
+    overflow: hidden;
+    padding: 0;
+}
+
+/* ============================================================================
+   MOBILE RESPONSIVENESS
+   ============================================================================ */
+@media (max-width: 968px) {
+    .control-bar {
+        padding: 1rem;
+    }
+
+    .control-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .control-section {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .control-section label {
+        width: 100%;
+        margin-bottom: 0.25rem;
+    }
+
+    .control-section select {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .control-section .btn {
         width: 100%;
     }
-    
-    .network {
-        height: 400px;
+
+    .control-divider {
+        width: 100%;
+        height: 1px;
+        margin: 0;
+    }
+
+    .control-spacer {
+        display: none;
+    }
+
+    .network-3d {
+        height: 60vh;
+        min-height: 400px;
+    }
+
+    .stats-overlay {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        min-width: auto;
+        max-width: none;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .camera-controls {
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+
+    .icon-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 0.95rem;
+    }
+
+    .tooltip-3d {
+        max-width: 280px;
+        font-size: 12px;
+    }
+
+    .transaction-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .transaction-toggle {
+        justify-content: center;
+    }
+
+    #transactionTable {
+        font-size: 0.8rem;
+    }
+
+    #transactionTable th,
+    #transactionTable td {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .stats-grid {
+        gap: 0.5rem;
+    }
+
+    .stat-card {
+        padding: 0.75rem;
+    }
+
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .stat-icon i {
+        font-size: 1rem;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+    }
+
+    .stat-value {
+        font-size: 0.95rem;
+    }
+}
+
+/* ============================================================================
+   FLOATING STATS BUTTON
+   ============================================================================ */
+.floating-stats-btn {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    z-index: 20;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.95);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.floating-stats-btn:hover {
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+}
+
+@media (max-width: 640px) {
+    .floating-stats-btn {
+        bottom: 12px;
+        right: 12px;
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
     }
 }
